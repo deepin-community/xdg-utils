@@ -1,0 +1,3 @@
+Tests: with-bash, with-dash
+Depends: bash, dash, make, xdg-utils
+Restrictions: rw-build-tree

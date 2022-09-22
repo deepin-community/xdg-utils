@@ -1,0 +1,39 @@
+Source: xdg-utils
+Maintainer: Debian freedesktop.org maintainers <pkg-freedesktop-maintainers@lists.alioth.debian.org>
+Uploaders: Nicholas Guriev <guriev-ns@ya.ru>
+Section: utils
+Priority: optional
+Standards-Version: 4.5.1
+Rules-Requires-Root: no
+Build-Depends: debhelper-compat (= 12)
+Build-Depends-Indep: mawk | awk, w3m | links | lynx, xmlto
+Vcs-Git: https://salsa.debian.org/freedesktop-team/xdg-utils.git
+Vcs-Browser: https://salsa.debian.org/freedesktop-team/xdg-utils
+Homepage: https://www.freedesktop.org/wiki/Software/xdg-utils/
+
+Package: xdg-utils
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends}
+Recommends:
+ libfile-mimeinfo-perl,
+ libnet-dbus-perl,
+ libx11-protocol-perl,
+ x11-utils,
+ x11-xserver-utils,
+Description: desktop integration utilities from freedesktop.org
+ xdg-utils contains utilities for integrating applications with the
+ desktop environment, regardless of which desktop environment is used.
+ .
+ The following utilities are included:
+ .
+  * xdg-desktop-menu - Install desktop menu items
+  * xdg-desktop-icon - Install icons on the user's desktop
+  * xdg-email - Compose a new email in the user's preferred email client,
+    potentially with subject and other info filled in
+  * xdg-icon-resource - Install icon resources
+  * xdg-mime - Query and install MIME types and associations
+  * xdg-open - Open a URI in the user's preferred application that
+    handles the respective URI or file type
+  * xdg-screensaver - Enable, disable, or suspend the screensaver
+  * xdg-settings - Get or set the default web browser and URI handlers

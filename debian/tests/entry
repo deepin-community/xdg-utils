@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e -u
+
+if [ $# = 0 ]; then
+  what=$(basename "$0")
+  set -- "/bin/${what#with-}"
+fi
+
+if [ -e scripts/xdg-open ]; then
+  echo >&2 "Dirty source tree, you need to make clean before run autopkgtest"
+fi
+
+BASH_XTRACEFD=1
+set -x
+
+./configure
+make autotest SHELL="${1:-/bin/sh}"

@@ -1,0 +1,6 @@
+Name: open
+Link: /usr/bin/open
+Alternative: /usr/bin/xdg-open
+Dependents:
+ /usr/share/man/man1/open.1.gz open.1.gz /usr/share/man/man1/xdg-open.1.gz
+Priority: 50

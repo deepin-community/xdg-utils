@@ -1,0 +1,604 @@
+xdg-utils (1.1.3-4.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Simplified handling for ttyon and ttyoff, with thanks to
+    Nicolas Boulenguez <nicolas@debian.org>. (closes: 981422)
+
+ -- Roland Clobus <rclobus@rclobus.nl>  Sun, 25 Apr 2021 16:00:00 +0200
+
+xdg-utils (1.1.3-4) unstable; urgency=medium
+
+  * Set executable bit of the "ttyon" and the "ttyoff" utilities right before
+    running tests, not in the "patch" target of debian/rules. This fixes
+    architecture independent build with "dpkg-buildpackage -A".
+
+ -- Nicholas Guriev <guriev-ns@ya.ru>  Mon, 18 Jan 2021 16:11:19 +0300
+
+xdg-utils (1.1.3-3) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Remove obsolete field Name from debian/upstream/metadata (already present
+    in machine-readable debian/copyright).
+
+  [ Reuben Thomas ]
+  * xdg-screensaver: fix suspending using window without a WM_NAME property
+    Closes: #970203, Upstream: #98.
+
+  [ KARBOWSKI Piotr ]
+  * xdg-open: Exit also on non-zero exit status from 'Exec' .desktop entry.
+    Upstream: !13.
+
+  [ Nicholas Guriev ]
+  * t-xdg-open.sh: Fix quoting issues. Closes: #975228, Upstream: !32.
+  * xdg-open: Open terminal window in generic mode if .desktop file requires so
+    Closes: #964877, Upstream: #84.
+  * desktop_file_to_binary: fix "unexpected operator" bug. Closes: #809877,
+    Upstream: #182.
+  * Remove Per Olofsson from Uploaders list. Thank you for your previous work!
+    Closes: #847164.
+  * Link to /usr/bin/open through alternatives mechanism. LP: #342584.
+  * New autopkgtests with Bash and Dash.
+  * Bump Standards-Version to 4.5.1, no required changes.
+
+ -- Nicholas Guriev <guriev-ns@ya.ru>  Sun, 10 Jan 2021 12:32:26 +0300
+
+xdg-utils (1.1.3-2) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Bump debhelper from old 10 to 12.
+  * Set debhelper-compat version in Build-Depends.
+  * Add upstream metadata info.
+
+  [ Nicholas Guriev ]
+  * Shift debian/NEWS content to the left.
+  * Set Rules-Requires-Root: no in debian/control.
+  * Obey the nocheck build option.
+  * Bump Standards-Version to 4.5.0.
+  * Add machine readable debian/copyright file.
+  * Now uscan(1) watches FreeDesktop GitLab.
+  * Add trailing new line into auto-generated patch header.
+  * Drop redundant invocation dh_installchangelogs in debian/rules.
+  * Install release notes as NEWS file in according P. 12.7 of the Debian
+    policy.
+  * xdg-mime: Create config directory if it does not exist yet.
+    Closes: #652038.
+
+  [ Rex Dieter ]
+  * xdg-open: Do better pcmanfm check, fix AND operator. Closes: #908760,
+    Upstream: BR106636, BR106161.
+
+  [ Alberto Salvia Novella ]
+  * xdg-email: Support for Deepin.
+
+  [ Mario van der Linde ]
+  * Enable Cinnamon screensaver for XDG aware desktop environments (e.g. LXQt).
+
+  [ Iain Lane ]
+  * xdg-screensaver: Sanitise window name before sending it over the bus.
+    Closes: #910070, LP: #1743216, Upstream: BR108121.
+
+  [ Andrea Tarocchi ]
+  * xdg-open: correct handling directories with spaces in the name.
+    LP: #1848335, Upstream: #166.
+
+ -- Nicholas Guriev <guriev-ns@ya.ru>  Fri, 13 Mar 2020 19:17:44 +0300
+
+xdg-utils (1.1.3-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Avoid argument injection vulnerability in open_envvar.
+      Fixes CVE-2017-18266, closes: #898317.
+  * Remove 01-open-lxqt.patch applied by upstream.
+  * Fix word expansion on KDE in xdg-email. Closes: #898999.
+  * Bump debhelper and standards version, no modifications for this.
+
+ -- Nicholas Guriev <guriev-ns@ya.ru>  Sun, 20 May 2018 01:18:48 +0300
+
+xdg-utils (1.1.2-2) unstable; urgency=medium
+
+  * Update Vcs for salsa.debian.org.
+  * 01-open-lxqt.patch: Fix support in LXQt, which isn't the same as LXDE.
+    Closes: #884436.
+
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Tue, 27 Feb 2018 10:25:43 +0100
+
+xdg-utils (1.1.2-1) unstable; urgency=low
+
+  [ Nicholas Guriev ]
+  * New maintainer, Debian freedesktop.org group. Closes: #876401.
+  * New upstream release. Closes: #865210.
+  * Bump Standards Version, no modifications for this.
+  * Remove gvfs-bin package from dependencies. Closes: #877747.
+
+  [ Per Olofsson ]
+  * Update Description.
+    - Correctly indent the list of commands.
+    - Remove mention of the Portland project. (xdg-utils is the only
+      surviving product from Portland.)
+    - gvfs-bin is also needed in MATE and Cinnamon.
+  * Add bug-script that reports the value of $XDG_CURRENT_DESKTOP.
+  * Add bug-presubj asking for 'sh -x' output.
+
+  [ Emilio Pozuelo Monfort ]
+  * Remove Fathi from Uploaders. Thanks for your previous work!
+
+ -- Nicholas Guriev <guriev-ns@ya.ru>  Sun, 08 Oct 2017 21:16:51 +0300
+
+xdg-utils (1.1.1-1) unstable; urgency=medium
+
+  * New upstream release.
+    - xdg-open: Handle whitespace in filenames and fix generic mode
+      regression. Closes: #801048.
+    - xdg-screensaver: Reset DPMS timer. Closes: #745340.
+  * Update debian/watch, primary URL is working again.
+  * Update Description.
+
+ -- Per Olofsson <pelle@debian.org>  Mon, 05 Oct 2015 21:19:23 +0200
+
+xdg-utils (1.1.0-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Adds references to specifications to the manuals. Closes: #800826.
+    - xdg-open: Handle files with '?' and '#' in their names in generic mode.
+      Closes: #800355.
+    - xdg-settings: Detect generic DE instead of failing. Closes: #787791.
+    - xdg-open, xdg-email: Add iceweasel to the list of fallback browsers.
+      Closes: #788047.
+    - xdg-open: Fall back to generic mode if gvfs-open and gnome-open are
+      missing. Closes: #685304.
+    - xdg-mime: Check ~/.config/mimeapps.list for default application.
+      Closes: #800825.
+  * Don't build html documentation, we don't install it anyway.
+  * Update Description.
+  * Update Homepage.
+
+ -- Per Olofsson <pelle@debian.org>  Sun, 04 Oct 2015 22:10:59 +0200
+
+xdg-utils (1.1.0~rc3+git20150922-1) unstable; urgency=medium
+
+  * Merge latest upstream git tree.
+    - xdg-icon-resource: Don't try to install anything into /.
+      Closes: #799741.
+  * Remove autotests/Makefile in distclean target.
+
+ -- Per Olofsson <pelle@debian.org>  Tue, 22 Sep 2015 10:20:04 +0200
+
+xdg-utils (1.1.0~rc3+git20150919-1) unstable; urgency=medium
+
+  * Rebase on latest upstream git tree.
+    - Drop the following patches which were applied upstream:
+      + xdg-email-detect-icedove.patch
+      + xdg-email-thunderbird-quoting.patch
+      + xdg-email-try-xdg-open.patch
+      + xdg-open-browser-multiword.diff
+      + xdg-open-printf.diff
+      + fix-bashism-use-of-echo.patch
+  * Maintain Debian patches in git instead of using quilt patches.
+  * Update git URLs in debian/control.
+  * xdg-open: Try $BROWSER first in generic mode if it is set by the
+    user. Closes: #799568.
+  * Add an automated test suite (under development).
+
+ -- Per Olofsson <pelle@debian.org>  Mon, 21 Sep 2015 07:04:31 +0200
+
+xdg-utils (1.1.0~rc3+git20150907-2) unstable; urgency=medium
+
+  * Add upstream bug URL to xdg-open-browser-multiword.diff.
+  * Use local variable in patch xdg-open-browser-multiword.diff.
+  * Add upstream bug URL to patch xdg-open-printf.diff.
+  * Add upstream bug URL to fix-bashism-use-of-echo.patch.
+  * Add xdg-email-try-xdg-open.patch: Try using xdg-open in xdg-email's
+    generic mode. Closes: #691259.
+  * Only try to auto-detect Mutt in xdg-email in generic mode after we
+    tried xdg-open.
+  * Add xdg-email-detect-icedove.patch: Also detect Icedove in xdg-email
+    for Thunderbird special handling.
+  * Add xdg-email-thunderbird-quoting.patch: Don't quote header fields
+    when calling Thunderbird from xdg-email.
+  * Drop patch xdg-email-mutt-detect.diff. Currently difficult to pinpoint
+    exactly when to use auto-detection.
+
+ -- Per Olofsson <pelle@debian.org>  Tue, 15 Sep 2015 07:06:25 +0200
+
+xdg-utils (1.1.0~rc3+git20150907-1) unstable; urgency=medium
+
+  * New upstream release. Closes: #773753, #754219.
+    - Drop patch xdg-open-escape-sed.diff, applied upstream.
+    - Drop patch xdg-open-spaces.diff, obsolete.
+    - Drop patch command-injection.patch, obsolete.
+    - Drop patch xdg-open-safe.diff, applied upstream.
+    - Drop patch CVE-2015-1877.patch, obsolete.
+    - Parses multiple sections in desktop files correctly. Closes: #776419.
+    - URI scheme handlers should work now, even in generic mode.
+      Closes: #678886.
+    - mailto: URIs should work in MATE now. Closes: #770333.
+    - xdg-screensaver should detect KDE5 correctly now.
+      Closes: #798084, #792138.
+  * Acknowledge NMUs. Closes: #685078, #691182, #773085, #777722.
+  * Remove scripts/html/index.html when cleaning.
+  * Bump debian/compat to 9.
+  * Bump Standards-Version to 3.9.6 (no changes).
+  * Add new location to debian/watch and add mangle rules for rc's.
+
+ -- Per Olofsson <pelle@debian.org>  Tue, 08 Sep 2015 20:57:26 +0200
+
+xdg-utils (1.1.0~rc1+git20111210-7.4) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Add CVE-2015-1877.patch patch.
+    CVE-2015-1877: Command injection vulnerability due to local variables
+    collision.
+    Thanks to Jiri Horner <laeqten@gmail.com> (Closes: #777722)
+
+ -- Salvatore Bonaccorso <carnil@debian.org>  Fri, 20 Feb 2015 16:24:18 +0100
+
+xdg-utils (1.1.0~rc1+git20111210-7.3) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Fix command injection vulnerability in xdg-open (closes: #773085).
+
+ -- Vincent Bernat <bernat@debian.org>  Sat, 10 Jan 2015 16:21:20 +0100
+
+xdg-utils (1.1.0~rc1+git20111210-7.2) unstable; urgency=medium
+
+  * Non-maintainer upload by the Security Team.
+  * Fix command injection vulnerability in xdg-open (closes: #773085).
+
+ -- Michael Gilbert <mgilbert@debian.org>  Wed, 31 Dec 2014 22:42:44 +0000
+
+xdg-utils (1.1.0~rc1+git20111210-7.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Add fix-bashism-use-of-echo.patch patch.
+    Instead of using echo -e in xdg-email use directly /bin/echo. Fixes
+    bashism use of echo and fixes opening of composer window in Thunderbird.
+    (Closes: #685078, #691182)
+
+ -- Salvatore Bonaccorso <carnil@debian.org>  Thu, 03 Apr 2014 14:38:15 +0200
+
+xdg-utils (1.1.0~rc1+git20111210-7) unstable; urgency=low
+
+  * Set Multi-Arch: foreign. Closes: #688681.
+
+ -- Per Olofsson <pelle@debian.org>  Mon, 04 Mar 2013 12:38:14 +0100
+
+xdg-utils (1.1.0~rc1+git20111210-6) unstable; urgency=low
+
+  * Fix regression in patch xdg-open-escape-sed.diff. Because of
+    insufficient quoting, files with spaces could not be opened in
+    generic mode. Thanks to Jesse Hathaway for noticing this.
+
+ -- Per Olofsson <pelle@debian.org>  Sat, 11 Feb 2012 17:06:35 +0100
+
+xdg-utils (1.1.0~rc1+git20111210-5) unstable; urgency=low
+
+  * Add patch xdg-open-escape-sed.diff: Escape the sed replacement string
+    in xdg-open when replacing command arguments for the generic
+    method. Fixes issue with the '&' character in URLs.
+    Thanks to Cyril Soldani. Closes: #654863.
+  * Bump debhelper compat level to v8.
+  * Add patch no-X.diff: Make xdg-open and xdg-email work without an X
+    display. Closes: #654306.
+  * Modify xdg-email-mutt-detect.diff so that it only tries to run mutt
+    inside a terminal window if running under X.
+
+ -- Per Olofsson <pelle@debian.org>  Sun, 15 Jan 2012 12:01:31 +0100
+
+xdg-utils (1.1.0~rc1+git20111210-4) unstable; urgency=low
+
+  * Use 'set -e' in the for loops in debian/rules.
+  * Only fallback on mutt if MAILER is not set and not running under a
+    DE. Thanks to Jindřich Makovička. Closes: #653578.
+
+ -- Per Olofsson <pelle@debian.org>  Thu, 29 Dec 2011 15:46:25 +0100
+
+xdg-utils (1.1.0~rc1+git20111210-3) unstable; urgency=medium
+
+  * Medium urgency due to RC bugfix.
+  * Build-depend on w3m, needed by xmlto to generate text output.
+    Closes: #652781.
+  * Run make with the C.UTF-8 locale to get correct characters in
+    output.
+  * Also preserve scripts/README during builds.
+
+ -- Per Olofsson <pelle@debian.org>  Tue, 20 Dec 2011 23:45:38 +0100
+
+xdg-utils (1.1.0~rc1+git20111210-2) unstable; urgency=low
+
+  * Fix debian/rules so that all scripts are really built from source.
+    Closes: #652066.
+  * Add patch xdg-open-spaces.diff: Single-double-quote argument to eval
+    so that filenames with spaces can be opened. Closes: #652067.
+  * Avoid .PHONY in debian/rules.
+
+ -- Per Olofsson <pelle@debian.org>  Wed, 14 Dec 2011 19:29:44 +0100
+
+xdg-utils (1.1.0~rc1+git20111210-1) unstable; urgency=low
+
+  * New upstream git snapshot b961235b197647d6649ef3d48d7cc2cecafe3d47.
+  * Drop patches applied upstream:
+    - xdg-mime-follow-symlinks.diff
+    - x-www-browser.diff
+    - xdg-mime-generic-use-mimetype.diff
+    - bashisms.diff
+    - xdg-screensaver-check-gnome.diff
+  * Modify patches to make changes to scripts/xdg-*.in, instead of the
+    generated scripts.
+  * Also check for ~/.mutt/muttrc when deciding whether to use mutt as
+    MUA or not. Thanks to martin f krafft. Closes: #648733.
+  * Build scripts/xdg-* from *.in files.
+  * Build-depend on xmlto and awk, as they are needed when building the
+    scripts.
+  * Also build the manual pages.
+  * Bump Standards-Version to 3.9.2. No changes.
+
+ -- Per Olofsson <pelle@debian.org>  Mon, 12 Dec 2011 12:04:25 +0100
+
+xdg-utils (1.1.0~rc1-3) unstable; urgency=low
+
+  [ Per Olofsson ]
+  * Remove debian/patches/xserver-blanking.diff, already applied
+    upstream. Thanks to Tanguy Ortolo for spotting this.
+    Closes: #647794.
+  * Add patch xdg-screensaver-check-gnome.diff: Use DBus API to check if
+    gnome-screensaver is running, as gnome-screensaver-command no longer
+    returns correct exit status. Thanks to Tanguy Ortolo for noticing
+    this. Closes: #647791.
+
+  [ Ben Hutchings ]
+  * Add patch xdg-screensaver-new-gnome.diff: Use DBus API for GNOME
+    since gnome-screensaver-command --poke has been removed.
+    Closes: #610155.
+
+ -- Per Olofsson <pelle@debian.org>  Sun, 20 Nov 2011 17:38:38 +0100
+
+xdg-utils (1.1.0~rc1-2) unstable; urgency=low
+
+  * Tag patches with upstream bug URLs.
+  * Add patch xdg-mime-follow-symlinks.diff: Follow symlinks when
+    querying MIME type in xdg-mime.
+  * Add patch xdg-open-browser-multiword.diff: Fix support for multi-word
+    $BROWSER commands. Closes: #612339.
+  * Add patch xdg-open-printf.diff: Use /usr/bin/printf if available when
+    decoding URLs. dash's printf doesn't understand \xHH
+    sequences. Closes: #613272.
+
+ -- Per Olofsson <pelle@debian.org>  Sun, 20 Feb 2011 18:34:53 +0100
+
+xdg-utils (1.1.0~rc1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Drop patches included upstream:
+    - xdg-email-mawk-support.diff
+    - run-mailcap-decode.diff
+    - xdg-open-spaces.diff
+  * Add debian/source/local-options with option unapply-patches.
+  * Recommend libfile-mimeinfo-perl instead of file, mime-support,
+    shared-mime-info, www-browser.
+  * Add patch xdg-mime-generic-use-mimetype.diff: Try mimetype first as
+    the generic method for xdg-mime. Closes: #609630.
+  * Add patch bashism.diff fixing some new bashisms.
+
+ -- Per Olofsson <pelle@debian.org>  Fri, 14 Jan 2011 09:45:41 +0100
+
+xdg-utils (1.0.2+cvs20100307-3) unstable; urgency=low
+
+  * debian/patches/xserver-blanking.diff: Support X server blanking in
+    xdg-screensaver. Thanks to Ben Hutchings. Closes: #511248.
+  * debian/patches/xdg-email-envvar.diff: Add $MAILER support to
+    xdg-email. Thanks to Jonathan Nieder and Jan Braun for input.
+    Info about this added to NEWS.Debian.
+    Closes: #574131.
+  * debian/patches/xdg-email-mutt-detect.diff: Fallback to mutt if
+    ~/.muttrc exists. Thanks to Jan Braun.
+  * Replace sensible-browser.diff with x-www-browser.diff. Instead of
+    using sensible-browser, try x-www-browser as the first choice when
+    $BROWSER is unset (and using generic method). This will approximate
+    sensible-browser's behaviour.
+  * Bump Standard-Version to 3.9.1. No changes.
+  * debian/patches/xdg-open-spaces.diff: Support paths with spaces in
+    open_generic_xdg_mime(). Thanks to Fabien Bochu. Closes: #592682.
+
+ -- Per Olofsson <pelle@debian.org>  Mon, 25 Oct 2010 10:42:32 +0200
+
+xdg-utils (1.0.2+cvs20100307-2) unstable; urgency=low
+
+  * Add patch xdg-email-mawk-support.diff: Fix bug in awk script
+    in xdg-email so that it works with mawk. Closes: #589133.
+
+ -- Per Olofsson <pelle@debian.org>  Wed, 15 Sep 2010 13:06:41 +0200
+
+xdg-utils (1.0.2+cvs20100307-1) unstable; urgency=low
+
+  * Make a new upstream release from CVS.
+    - Make xdg-open's open_generic() check for URLs before trying to open them
+      with non-browsers. Closes: #571557.
+
+ -- Per Olofsson <pelle@debian.org>  Sun, 07 Mar 2010 12:59:45 +0100
+
+xdg-utils (1.0.2+cvs20100223-1) unstable; urgency=low
+
+  * Make a new upstream release from CVS.
+    - Add gvfs-copy and gvfs-info support. Closes: 479578.
+    - Add email attachments support to Thunderbird from xdg-email.
+      Closes: #531850.
+    - Add KDE 4 support to xdg-email. Closes: #555212.
+    - Add dbus commands to xdg-screensaver for KDE 4. Closes: #557104.
+
+  [ Per Olofsson ]
+  * Use source format 3.0 (quilt).
+  * Use dh override rules in debian/rules. Build-dep on debhelper 7.4.15.
+  * Add ${misc:Depends} to make lintian happy.
+  * Ack NMU. Closes: #508125.
+  * Bump standards-version to 3.8.4. No changes.
+  * Update Suggests to refer to GVfs and KDE4 packages for opening
+    files, etc.
+  * Remove libgtk2.0-bin and desktop-file-utils from Suggests. They are
+    not interesting for users and are usually installed anyway.
+  * Both kdebase-runtime and exo-utils are pretty much guaranteed to be
+    installed if KDE or Xfce is installed. So don't suggest those. Keep
+    gvfs-bin, however.
+  * mimeopen doesn't work as it should, so don't use it.
+
+  [ Fathi Boudra ]
+  * Add myself to Uploaders field.
+  * Remove debian/postinst and debian/postrm: they are not required.
+    Closes: 566165.
+  * Add xdg-settings to xdg-utils description.
+
+ -- Per Olofsson <pelle@debian.org>  Wed, 15 Jul 2009 11:35:01 +0200
+
+xdg-utils (1.0.2-6.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * debian/patches/fix-xdg-screensaver-race: Fix race condition which
+    leads to process leak. Closes: #508125.
+
+ -- Ben Hutchings <ben@decadent.org.uk>  Fri, 02 Jan 2009 17:47:19 +0000
+
+xdg-utils (1.0.2-6) unstable; urgency=low
+
+  * debian/patches/run-mailcap.diff: Test $1 instead of $file which has
+    not been assigned yet. Fixes failure to open URLs other than file://
+    when xdg-open is called under a generic desktop environment
+    (regression in 1.0.2-5). Closes: #484602.
+
+ -- Per Olofsson <pelle@debian.org>  Fri, 06 Jun 2008 00:00:04 +0200
+
+xdg-utils (1.0.2-5) unstable; urgency=low
+
+  * debian/patches/xdg-open-generic: Use 'local' according to policy.
+  * Add a .diff extension to all patch filenames.
+  * Split up patches to make them more fine-grained (one feature per
+    patch).
+  * Remove libexo alternative dep for exo-utils, now that exo-utils is
+    in lenny.
+  * Remove xsltproc from Recommends, not used anymore.
+  * Add debian/patches/xdg-mime-xfce.diff: Fix xdg-mime under Xfce.
+    Closes: #430654.
+  * Add debian/patches/xdg-mime-errorchecking.diff: Check return code
+    from programs invoked by "xdg-mime query filetype". Closes: #465443.
+
+ -- Per Olofsson <pelle@debian.org>  Mon, 02 Jun 2008 09:50:48 +0200
+
+xdg-utils (1.0.2-4) unstable; urgency=low
+
+  * Update debian/patches/xdg-email-generic:
+    - Don't add things already added by upstream now.
+    - Don't check if gnome-open/exo-open exists, because they almost
+      certainly do if running under the corresponding desktop environment.
+    - Remove upstream's default BROWSER list, sensible-browser will
+      take care of it instead.
+  * Update debian/patches/xdg-open-generic:
+    - Don't check if gnome-open/exo-open exists, because they almost
+      certainly do if running under the corresponding desktop environment.
+      Check for kfmclient though, as the user might not have konqueror.
+    - Decode file:/// URLs correctly before passing them to run-mailcap,
+      expanding any percent-encoded characters.
+  * Remove menu from Suggests. Was only ever used by xdg-su which does
+    not exist anymore.
+  * Switch to the new, cool debhelper v7. Rewrite debian/rules so it gets
+    much smaller.
+  * Remove the -1 revision from the quilt build-dep.
+  * Add debian/patches/bashisms.patch, correcting some bashisms.
+    Thanks to Chris Lamb for part of it. Closes: #472890.
+
+ -- Per Olofsson <pelle@debian.org>  Sun, 04 May 2008 22:59:35 +0200
+
+xdg-utils (1.0.2-3) unstable; urgency=low
+
+  * Suggest the new exo-utils package. Keep libexo-0.3-0 as an
+    alternative. Closes: #462498.
+
+ -- Per Olofsson <pelle@debian.org>  Tue, 29 Jan 2008 20:40:16 +0100
+
+xdg-utils (1.0.2-2) unstable; urgency=low
+
+  * Recommend iceweasel instead of firefox.
+  * Suggest kdelibs4c2a instead of kdelibs-bin. (Provides the dcop
+    command.)
+  * Recommend x11-utils and x11-xserver-utils instead of xbase-clients.
+    (Provide xprop and xset.)
+
+ -- Per Olofsson <pelle@debian.org>  Fri, 21 Dec 2007 18:33:51 +0100
+
+xdg-utils (1.0.2-1) unstable; urgency=low
+
+  * New upstream release. Closes: #454925.
+  * Point Vcs-{Git,Browser} to new repo at git.debian.org. Also remove
+    XS- prefix.
+  * Bump Standards-Version to 3.7.3 (no changes).
+  * Add new Homepage field. Remove Website psuedo-field from
+    description.
+  * Don't ignore errors from make distclean in debian/rules. Check if
+    Makefile exists first instead.
+  * Leading lowercase character in short description.
+
+ -- Per Olofsson <pelle@debian.org>  Wed, 19 Dec 2007 11:32:57 +0100
+
+xdg-utils (1.0.1-2) unstable; urgency=low
+
+  * New upstream release
+  * Fix debian/watch.
+  * Use quilt's supplied make rules for patch handling.
+  * Distribute RELEASE_NOTES and TODO
+  * Update description
+
+ -- Per Olofsson <pelle@debian.org>  Tue, 16 Jan 2007 22:04:50 +0100
+
+xdg-utils (1.0-2) UNRELEASED; urgency=low
+
+  * Use XS-Vcs-Git: instead of XS-X-Vcs-Git:.
+
+ -- Per Olofsson <pelle@debian.org>  Sun, 29 Oct 2006 22:15:28 +0100
+
+xdg-utils (1.0-1) unstable; urgency=low
+
+  * New upstream release.
+    - Remove debian/patches/xdg-open-xfce, integrated upstream.
+    - Remove debian/patches/xdg-icon-resource-check-for-cache,
+      integrated upstream.
+    - Remove debian/patches/no-tests-clean, integrated upstream.
+  * Update debian/watch.
+  * Added XS-X-Vcs-Git reference to repository in source control file.
+
+ -- Per Olofsson <pelle@debian.org>  Sun, 22 Oct 2006 21:31:18 +0200
+
+xdg-utils (1.0~beta3-1) unstable; urgency=low
+
+  * New upstream release.
+    - xdg-su is gone.
+  * Fix xfce support in xdg-open. Closes: #382836.
+  * Added debian/watch.
+  * Check for icon-theme.cache before running gtk-update-icon-cache. If we
+    create a cache where none was, things will break for other packages.
+  * Disable tests-clean rule (does nasty things).
+  * Added postinst/prerm which create/remove the following directories in
+    /usr/local:
+    - /usr/local/share/applications
+    - /usr/local/share/desktop-directories
+    - /usr/local/share/icons
+    - /usr/local/share/icons/hicolor
+    - /usr/local/share/mime
+    - /usr/local/share/mime/packages
+  * Recommend: shared-mime-info.
+
+ -- Per Olofsson <pelle@debian.org>  Tue, 29 Aug 2006 17:35:02 +0200
+
+xdg-utils (0.9+1.0beta1-2) unstable; urgency=low
+
+  * Remove comments from debian/rules.
+  * Move Depends: to Recommends:. Closes: #380141.
+  * Recommend: mime-support.
+  * Use run-mailcap for generic xdg-open support.
+  * Use generic fallbacks even if running a desktop environment (if the
+    needed program is not found).
+  * Try su-to-root as a generic fallback in xdg-su. Suggest: menu.
+
+ -- Per Olofsson <pelle@debian.org>  Sat, 29 Jul 2006 11:51:16 +0200
+
+xdg-utils (0.9+1.0beta1-1) unstable; urgency=low
+
+  * Initial release. Closes: #375362
+
+ -- Per Olofsson <pelle@debian.org>  Mon, 26 Jun 2006 10:56:12 +0200

@@ -1,0 +1,36 @@
+#!/usr/bin/make -f
+
+BUILT_FILES := scripts/xdg-*.in scripts/man/*.1 scripts/README
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	set -e; for i in $(BUILT_FILES); do \
+		f=$${i%.in}; \
+		if [ -e $$f ] && ! [ -e $$f.build-orig ]; then \
+			mv $$f $$f.build-orig; \
+		fi; \
+	done
+	cd scripts && LC_ALL=C.UTF-8 make scripts man
+
+override_dh_auto_clean:
+	dh_auto_clean
+	set -e; for i in $(BUILT_FILES); do \
+		f=$${i%.in}; \
+		if [ -e $$f.build-orig ]; then \
+			mv $$f.build-orig $$f; \
+		fi; \
+	done
+	rm -f scripts/html/index.html
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+# Use automated tests that do not require a user action.
+	make autotest
+endif
+
+# Install the upstream release notes and rename the file.
+override_dh_installdocs:
+	dh_installdocs
+	install -p RELEASE_NOTES debian/xdg-utils/usr/share/doc/xdg-utils/NEWS
