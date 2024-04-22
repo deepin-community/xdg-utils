@@ -1,3 +1,9 @@
+xdg-utils (1.1.3-4.1deepin1) unstable; urgency=medium
+
+  * fix: Add new case for Deepin while detecting DE
+
+ -- ComixHe <heyuming@deepin.org>  Mon, 22 Apr 2024 15:53:10 +0800
+
 xdg-utils (1.1.3-4.1) unstable; urgency=medium
 
   * Non-maintainer upload.

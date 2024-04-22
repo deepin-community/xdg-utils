@@ -1,0 +1,46 @@
+From 116c2a22c7ac0b46c671d87407ea4af1b1cef56b Mon Sep 17 00:00:00 2001
+From: ComixHe <heyuming@deepin.org>
+Date: Mon, 22 Apr 2024 16:22:26 +0800
+Subject: [PATCH 1/1] fix: Add new case for Deepin while detecting DE
+
+upstream pr: https://gitlab.freedesktop.org/xdg/xdg-utils/-/merge_requests/111
+
+Log:
+---
+ scripts/xdg-utils-common.in | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/scripts/xdg-utils-common.in b/scripts/xdg-utils-common.in
+index d36bdb1..2c2c655 100644
+--- a/scripts/xdg-utils-common.in
++++ b/scripts/xdg-utils-common.in
+@@ -288,7 +288,7 @@ detectDE()
+          KDE)
+            DE=kde;
+            ;;
+-         DEEPIN|Deepin|deepin)
++         DEEPIN|Deepin|deepin|DDE)
+            DE=deepin;
+            ;;
+          LXDE)
+@@ -329,7 +329,7 @@ detectDE()
+            DE=gnome;
+            ;;
+          LXDE|Lubuntu)
+-           DE=lxde; 
++           DE=lxde;
+            ;;
+          MATE)
+            DE=mate;
+@@ -342,7 +342,7 @@ detectDE()
+ 
+     if [ x"$DE" = x"" ]; then
+       # fallback to uname output for other platforms
+-      case "$(uname 2>/dev/null)" in 
++      case "$(uname 2>/dev/null)" in
+         CYGWIN*)
+           DE=cygwin;
+           ;;
+-- 
+2.44.0
+
