@@ -1,3 +1,5 @@
+# Patch originally authored by Nicholas Guriev <guriev-ns@ya.ru>
+# Modified by bluesky <chenchongbiao@deepin.org> on Mon, 22 Apr 2024 20:00:51 +0800
 Description: Collected Debian patches for xdg-utils
 Author: Nicholas Guriev <guriev-ns@ya.ru>
 
@@ -680,8 +682,9 @@ repository.
             DE=kde;
             ;;
 -         # Deepin Desktop Environments
-          DEEPIN|Deepin|deepin)
+-         DEEPIN|Deepin|deepin)
 -           DE=dde;
++         DEEPIN|Deepin|deepin|DDE)
 +           DE=deepin;
             ;;
           LXDE)
