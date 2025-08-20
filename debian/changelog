@@ -1,8 +1,29 @@
-xdg-utils (1.1.3-4.1deepin1) unstable; urgency=medium
+xdg-utils (1.2.1-2) unstable; urgency=medium
 
-  * add new case for Deepin while detecting DE
+  * Fix xdg-email for KDE 6. Closes: #1083074.
+  * debian/patches/debian-changes: drop unneeded hunk, the fix is
+    already upstream.
 
- -- bluesky <chenchongbiao@deepin.org>  Mon, 22 Apr 2024 20:00:51 +0800
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Fri, 29 Nov 2024 18:48:18 +0100
+
+xdg-utils (1.2.1-1) unstable; urgency=medium
+
+  [ Nicolas Boulenguez ]
+  * Switch to debhelper 13
+  * Call Make via dh_auto_build
+  * Remove creation of backup for built files
+  * autotest/ttyon/off: remove execution permission
+  * Improve readability and genericity of watch file
+
+  [ Emilio Pozuelo Monfort ]
+  * New upstream release. Closes: #1062449.
+    - Adds support for KDE 6. Closes: #1088644, #1088566, #1088541, #1083074.
+  * Fix watch file, as gitlab changed the tags page.
+  * Add patch from Nicholas Guriev to fix tests.
+  * debian/docs: install README.md.
+  * Add myself to uploaders.
+
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Fri, 29 Nov 2024 11:34:19 +0100
 
 xdg-utils (1.1.3-4.1) unstable; urgency=medium
 

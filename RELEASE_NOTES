@@ -1,3 +1,15 @@
+Release notes for xdg-utils 1.2.1
+=================================
+This release fixes:
+* xdg-icon-resource: Fix for incorrect syntax
+* documentation: Proper quoting of `_MANUALPAGE` and `_USAGE` sections.
+
+Release notes for xdg-utils 1.2.0
+=================================
+* better support for Plasma6, Deepin, LXQt
+* partial support for WSL / flatpak's
+* Numerous other fixes and improvements
+
 Release notes for xdg-utils 1.1.0
 =================================
 

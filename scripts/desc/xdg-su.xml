@@ -30,7 +30,7 @@
 
   <refnamediv>
     <refname>xdg-su</refname>
-    <refpurpose>run a GUI program as root after prompting for the root password</refpurpose>
+    <refpurpose>run a GUI program as another user (typically root) after prompting for that user's password</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -67,6 +67,15 @@
   <refsect1 id="options">
     <title>Options</title>
     <variablelist>
+      <varlistentry>
+	<term><option>-c <replaceable>command</replaceable></option></term>
+	<listitem>
+	  <simpara>
+	    the command to run. This argument is mandatory.
+	  </simpara>
+	</listitem>
+      </varlistentry>
+
       <varlistentry>
 	<term><option>-u <replaceable>user</replaceable></option></term>
 	<listitem>

@@ -17,13 +17,13 @@
 
 manualpage()
 {
-cat << _MANUALPAGE
+cat << '_MANUALPAGE'
 _MANUALPAGE
 }
 
 usage()
 {
-cat << _USAGE
+cat << '_USAGE'
 _USAGE
 }
 
@@ -31,8 +31,7 @@ _USAGE
 
 open_kde()
 {
-    DIALOG=`which kdialog`
-    if [ $? -eq 0 ]; then
+    if DIALOG=`command -v kdialog`; then
         if [ x"$TITLE" != x"" ]; then
             $DIALOG --title "$TITLE" --getopenfilename "$1" ""
         else
@@ -51,10 +50,9 @@ open_kde()
 
 open_zenity()
 {
-    DIALOG=`which zenity`
-    if [ $? -eq 0 ]; then
+    if DIALOG=`command -v zenity`; then
         if [ x"$1" != x"" ]; then
-            cd `dirname "$1"` 2>/dev/null
+            cd "`dirname "$1"`" 2>/dev/null
             FILENAME=`basename "$1"`
             if [ x"$FILENAME" != x"" ]; then
                 FILENAME="--filename=""$FILENAME"
@@ -87,8 +85,7 @@ open_zenity()
 
 open_multi_kde()
 {
-    DIALOG=`which kdialog`
-    if [ $? -eq 0 ]; then
+    if DIALOG=`command -v kdialog`; then
         if [ x"$TITLE" != x"" ]; then
             $DIALOG --title "$TITLE" --multiple --separate-output \
                     --getopenfilename "$1" ""
@@ -108,10 +105,9 @@ open_multi_kde()
 
 open_multi_zenity()
 {
-    DIALOG=`which zenity`
-    if [ $? -eq 0 ]; then
+    if DIALOG=`command -v zenity`; then
         if [ x"$1" != x"" ]; then
-            cd `dirname "$1"` 2>/dev/null
+            cd "`dirname "$1"`" 2>/dev/null
             FILENAME=`basename "$1"`
             if [ x"$FILENAME" != x"" ]; then
                 FILENAME="--filename=""$FILENAME"
@@ -145,8 +141,7 @@ open_multi_zenity()
 
 save_kde()
 {
-    DIALOG=`which kdialog`
-    if [ $? -eq 0 ]; then
+    if DIALOG=`command -v kdialog`; then
         if [ x"$TITLE" != x"" ]; then
             $DIALOG --title "$TITLE" --getsavefilename "$1" ""
         else
@@ -165,10 +160,9 @@ save_kde()
 
 save_zenity()
 {
-    DIALOG=`which zenity`
-    if [ $? -eq 0 ]; then
+    if DIALOG=`command -v zenity`; then
         if [ x"$1" != x"" ]; then
-            cd `dirname "$1"` 2>/dev/null
+            cd "`dirname "$1"`" 2>/dev/null
             FILENAME=`basename "$1"`
             if [ x"$FILENAME" != x"" ]; then
                 FILENAME="--filename=""$FILENAME"
@@ -201,8 +195,7 @@ save_zenity()
 
 directory_kde()
 {
-    DIALOG=`which kdialog`
-    if [ $? -eq 0 ]; then
+    if DIALOG=`command -v kdialog`; then
         if [ x"$TITLE" != x"" ]; then
             $DIALOG --title "$TITLE" --getexistingdirectory "$1" ""
         else
@@ -221,8 +214,7 @@ directory_kde()
 
 directory_zenity()
 {
-    DIALOG=`which zenity`
-    if [ $? -eq 0 ]; then
+    if DIALOG=`command -v zenity`; then
         if [ x"$1" != x"" ]; then
             cd "$1" 2>/dev/null
         fi

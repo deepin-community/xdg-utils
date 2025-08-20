@@ -34,7 +34,7 @@ repeat_test() {
 ## USAGE: 
 # repeat_test test_func N var1 ... varN var1_value1 ... var1_valueM ... varN_valueM
 # where N is the number of values to substiute and M is the number of 
-# values each varable takes
+# values each variable takes
 # 
 # EXAMPLE
 # repeat_test copy_file 2 INPUT OUTPUT infile1 infile2 outfile1 outfile2

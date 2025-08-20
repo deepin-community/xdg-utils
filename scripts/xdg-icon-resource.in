@@ -17,13 +17,13 @@
 
 manualpage()
 {
-cat << _MANUALPAGE
+cat << '_MANUALPAGE'
 _MANUALPAGE
 }
 
 usage()
 {
-cat << _USAGE
+cat << '_USAGE'
 _USAGE
 }
 
@@ -306,7 +306,7 @@ fi
 need_kde_icon_path()
 {
   local path
-  path=`readlink -f "$1" 2> /dev/null` # Normalize path
+  path="$(xdg_realpath "$1")" 2> /dev/null # Normalize path
   DEBUG 2 "need_kde_icon_path $path"
   if [ -z "$path" ] ; then
      DEBUG 2 "need_kde_icon_path RETURN 1 (not needed, no xdg icon dir)"
@@ -323,7 +323,7 @@ need_kde_icon_path()
   fi
   needed=0 # Needed
   for y in $kde_icon_dirs ; do
-    x=`readlink -f "$y"` # Normalize path
+    x="$(xdg_realpath "$y")" # Normalize path
     DEBUG 3 "Normalize $y --> $x"
     if [ -n "$x" ] ; then
       if [ "$x" = "$path" ] ; then
@@ -386,7 +386,7 @@ need_gnome_mime=
 
 [ -n "$icon_name" ] || icon_name=`basename "$icon_file" | sed 's/\.[a-z][a-z][a-z]$//'`
 
-if [ "$vendor" = "true" -a "$action" = "install" -a "$context" = "apps" ] ; then
+if [ "$vendor" = "true" ] && [ "$action" = "install" ] && [ "$context" = "apps" ] ; then
     check_vendor_prefix "$icon_name" "icon name"
 fi
 
@@ -397,7 +397,7 @@ DEBUG 1 "$action icon in $xdg_dir"
 [ "$action" = "install" ] && [ -f "$icon_icon_file" ] && DEBUG 1 "install $icon_icon_name meta file in $xdg_dir"
 [ -n "$kde_dir" ] && DEBUG 1 "$action symlink in $kde_dir (KDE 3.x support)"
 [ -n "$need_gnome_mime" ] && DEBUG 1 "$action gnome-mime-$icon_name symlink (GNOME 2.x support)"
-[  "$action" = "install" -a -n "$dot_icon_dir" ] && DEBUG 1 "$action ~/.icons symlink (GNOME 2.8 support)"
+[  "$action" = "install" ] && [ -n "$dot_icon_dir" ] && DEBUG 1 "$action ~/.icons symlink (GNOME 2.8 support)"
 
 case "$action" in
     install)

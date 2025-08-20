@@ -100,7 +100,7 @@ for $f ( @test_files ) {
 			$txt =~ s/\"//g;
 			print HTM "<p>$txt</p>\n";
 		}
-		#find initilization
+		#find initialization
 		elsif ( m/test_init/ ) {
 			print HTM "<h2>Dependencies</h2>\n";
 			$state = 'INIT';

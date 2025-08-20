@@ -47,8 +47,8 @@
 
 
 # Insert the examples text from the .txt file
-# after the "cat << _MANUALPAGE" line
-/^cat << _MANUALPAGE/ {
+# after the "cat << '_MANUALPAGE'" line
+/^cat << '_MANUALPAGE'/ {
 	# determine the name of the .txt file
 	txtfile = FILENAME
 	sub(/\.in$/, ".txt", txtfile)
@@ -71,8 +71,8 @@
 
 
 # Insert the usage text from the .txt file
-# after the "cat << _USAGE" line
-/^cat << _USAGE/ {
+# after the "cat << '_USAGE'" line
+/^cat << '_USAGE'/ {
 	# determine the name of the .txt file
 	txtfile = FILENAME
 	sub(/\.in$/, ".txt", txtfile)

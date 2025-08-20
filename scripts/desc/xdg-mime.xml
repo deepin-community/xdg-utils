@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl"
    href="http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl"?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+    "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
 ]>
 <refentry id="xdg-mime">
   <refentryinfo>
@@ -39,10 +39,9 @@ and adding descriptions for new file types</refpurpose>
       <command>xdg-mime</command>
       <arg choice="plain">query</arg>
       <group choice="req">
-	<arg choice="plain">filetype</arg>
-	<arg choice="plain">default</arg>
+	<arg choice="plain">filetype <replaceable>FILE</replaceable></arg>
+	<arg choice="plain">default <replaceable>mimetype</replaceable></arg>
       </group>
-      <arg choice="plain">...</arg>
     </cmdsynopsis>
     <cmdsynopsis>
       <command>xdg-mime</command>
@@ -84,25 +83,39 @@ and adding descriptions for new file types</refpurpose>
     <title>Commands</title>
     <variablelist>
       <varlistentry>
-	<term>query</term>
+	<term>query file</term>
 	<listitem>
 	  <simpara>
-	    Returns information related to file types.
-	  </simpara>
-	  <simpara>
-            The <emphasis>query</emphasis> option is for use inside a desktop session only.
-            It is not recommended to use xdg-mime query as root.
-	  </simpara>
-	  <simpara>
-            The following queries are supported:
-	  </simpara>
-	  <simpara>query filetype <replaceable>FILE</replaceable>:
 	    Returns the file type of <replaceable>FILE</replaceable> in the form of a MIME type.
 	  </simpara>
-	  <simpara>query default <replaceable>mimetype</replaceable>:
+	  <simpara>
+		Please note that <replaceable>FILE</replaceable> names starting with a <code>-</code> will be rejected, this can be mitigated:
+	  </simpara>
+      <itemizedlist>
+        <listitem><para>Pass absolute paths, i.e. by using <command>realpath</command> as a preprocessor.</para></listitem>
+		<listitem><para>Prefix known relative filepaths with a <quote>./</quote>. For example using <code>sed -E 's|^[^/]|./\0|'</code> as a preprocessor.</para></listitem>
+      </itemizedlist>
+	  <simpara>
+            The <emphasis>query file</emphasis> option is for use inside a desktop session only.
+            It is not recommended to use xdg-mime query file as root.
+	  </simpara>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term>query default</term>
+	<listitem>
+	  <simpara>
 	    Returns the default application that the desktop environment uses for opening
 	    files of type <replaceable>mimetype</replaceable>. The default application is
             identified by its *.desktop file.
+	  </simpara>
+	  <simpara>
+        The value returned by this command may or may not match the application launched by <command>xdg-open</command> as <command>xdg-open</command> hands over to desktop specific openers most of the time which may implement their own logic.
+	  </simpara>
+	  <simpara>
+            The <emphasis>query default</emphasis> option is for use inside a desktop session only.
+            It is not recommended to use xdg-mime query default as root.
 	  </simpara>
 	</listitem>
       </varlistentry>
@@ -130,6 +143,12 @@ and adding descriptions for new file types</refpurpose>
 	    subject to system policy or approval by the end-user. xdg-mime
             query can be used to verify whether an application is the
             actual default handler for a specific file type.   
+	  </simpara>
+	  <simpara>
+        <emphasis>Security Note:</emphasis> Never set a handler that will blindly execute code or commands from the file being handled. Such behaviour will sooner than later lead to unintended code execution i.e. through a curious user trying to inspect a freshly downloaded file but running it by accident.
+	  </simpara>
+	  <simpara>
+        Keeping opening and executing separate actions helps with people protecting themselves from malware, the default handler is an opener, not a runner.
 	  </simpara>
 	  <simpara>
             The <emphasis>default</emphasis> option is for use inside a desktop session only.

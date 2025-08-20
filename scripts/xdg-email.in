@@ -18,13 +18,13 @@
 
 manualpage()
 {
-cat << _MANUALPAGE
+cat << '_MANUALPAGE'
 _MANUALPAGE
 }
 
 usage()
 {
-cat << _USAGE
+cat << '_USAGE'
 _USAGE
 }
 
@@ -34,21 +34,21 @@ run_thunderbird()
 {
     local THUNDERBIRD MAILTO NEWMAILTO TO CC BCC SUBJECT BODY ATTACH
     THUNDERBIRD="$1"
-    MAILTO=$(echo "$2" | sed 's/^mailto://')
+    MAILTO="$(echo "$2" | sed 's/^mailto://')"
     echo "$MAILTO" | grep -qs "^?"
     if [ "$?" = "0" ] ; then
-        MAILTO=$(echo "$MAILTO" | sed 's/^?//')
+        MAILTO="$(echo "$MAILTO" | sed 's/^?//')"
     else
-        MAILTO=$(echo "$MAILTO" | sed 's/^/to=/' | sed 's/?/\&/')
+        MAILTO="$(echo "$MAILTO" | sed 's/^/to=/' | sed 's/?/\&/')"
     fi
 
-    MAILTO=$(echo "$MAILTO" | sed 's/&/\n/g')
-    TO=$(/bin/echo -e $(echo "$MAILTO" | grep '^to=' | sed 's/^to=//;s/%\(..\)/\\x\1/g' | awk '{ printf "%s,",$0 }'))
-    CC=$(/bin/echo -e $(echo "$MAILTO" | grep '^cc=' | sed 's/^cc=//;s/%\(..\)/\\x\1/g' | awk '{ printf "%s,",$0 }'))
-    BCC=$(/bin/echo -e $(echo "$MAILTO" | grep '^bcc=' | sed 's/^bcc=//;s/%\(..\)/\\x\1/g' | awk '{ printf "%s,",$0 }'))
-    SUBJECT=$(echo "$MAILTO" | grep '^subject=' | tail -n 1)
-    BODY=$(echo "$MAILTO" | grep '^body=' | tail -n 1)
-    ATTACH=$(/bin/echo -e $(echo "$MAILTO" | grep '^attach=' | sed 's/^attach=//;s/%\(..\)/\\x\1/g' | awk '{ printf "%s,",$0 }' | sed 's/,$//'))
+    MAILTO="$(echo "$MAILTO" | sed 's/&/\n/g')"
+    TO="$(/bin/echo -e "$(echo "$MAILTO" | grep '^to=' | sed 's/^to=//;s/%\(..\)/\\x\1/g' | awk '{ printf "%s,",$0 }')")"
+    CC="$(/bin/echo -e "$(echo "$MAILTO" | grep '^cc=' | sed 's/^cc=//;s/%\(..\)/\\x\1/g' | awk '{ printf "%s,",$0 }')")"
+    BCC="$(/bin/echo -e "$(echo "$MAILTO" | grep '^bcc=' | sed 's/^bcc=//;s/%\(..\)/\\x\1/g' | awk '{ printf "%s,",$0 }')")"
+    SUBJECT="$(echo "$MAILTO" | grep '^subject=' | tail -n 1)"
+    BODY="$(echo "$MAILTO" | grep '^body=' | tail -n 1)"
+    ATTACH="$(/bin/echo -e "$(echo "$MAILTO" | grep '^attach=' | sed 's/^attach=//;s/%\(..\)/\\x\1/g' | awk '{ printf "%s,",$0 }' | sed 's/,$//')")"
 
     if [ -z "$TO" ] ; then
         NEWMAILTO=
@@ -84,20 +84,24 @@ run_thunderbird()
 
 open_kde()
 {
+    local kreadconfig profile client
     if [ -n "$KDE_SESSION_VERSION" ] && [ "$KDE_SESSION_VERSION" -ge 5 ]; then
-        local kreadconfig=kreadconfig$KDE_SESSION_VERSION
+        kreadconfig=kreadconfig$KDE_SESSION_VERSION
     else
-        local kreadconfig=kreadconfig
+        kreadconfig=kreadconfig
     fi
 
-    if which $kreadconfig >/dev/null 2>&1; then
-        local profile=$($kreadconfig --file emaildefaults \
-                                     --group Defaults --key Profile)
+    if command -v "$kreadconfig" >/dev/null; then
+        profile="$("$kreadconfig" --file emaildefaults \
+                                     --group Defaults --key Profile)"
         if [ -n "$profile" ]; then
-            local client=$($kreadconfig --file emaildefaults \
+            client="$("$kreadconfig" --file emaildefaults \
                                         --group "PROFILE_$profile" \
                                         --key EmailClient \
-                                  | cut -d ' ' -f 1)
+                                  | cut -d ' ' -f 1)"
+            if [ -z "${client%%*.desktop}" ] && ! command -v "$client" >/dev/null 2>&1; then
+                client="$(desktop_file_to_binary "$client")"
+            fi
 
             if echo "$client" | grep -Eq 'thunderbird|icedove'; then
                 run_thunderbird "$client" "$1"
@@ -112,14 +116,14 @@ open_kde()
         *) command=kde-open$KDE_SESSION_VERSION ;;
     esac
 
-    if which $command >/dev/null 2>&1; then
+    if command -v "$command" >/dev/null; then
         DEBUG 1 "Running $command \"$1\""
         if [ "$KDE_SESSION_VERSION" = 3 ]; then
             # KDE3 uses locale's encoding when decoding the URI,
             # so set it to UTF-8
-            LC_ALL=C.UTF-8 $command "$1"
+            LC_ALL=C.UTF-8 "$command" "$1"
         else
-            $command "$1"
+            "$command" "$1"
         fi
     else
         DEBUG 1 "$command missing; trying generic mode instead."
@@ -137,12 +141,11 @@ open_gnome3()
 {
     local client
     local desktop
-    desktop=`xdg-mime query default "x-scheme-handler/mailto"`
-    client=`desktop_file_to_binary "$desktop"`
-    echo $client | grep -E 'thunderbird|icedove' > /dev/null 2>&1
-    if [ $? -eq 0 ] ; then
+    desktop="$(xdg-mime query default "x-scheme-handler/mailto")"
+    client="$(desktop_file_to_binary "$desktop")"
+    case "$client" in *thunderbird*|*icedove*)
         run_thunderbird "$client" "$1"
-    fi
+    esac
 
     if gio help open 2>/dev/null 1>&2; then
         DEBUG 1 "Running gio open \"$1\""
@@ -165,11 +168,10 @@ open_gnome3()
 open_gnome()
 {
     local client
-    client=`gconftool-2 --get /desktop/gnome/url-handlers/mailto/command | cut -d ' ' -f 1` || ""
-    echo $client | grep -E 'thunderbird|icedove' > /dev/null 2>&1
-    if [ $? -eq 0 ] ; then
+    client="$(gconftool-2 --get /desktop/gnome/url-handlers/mailto/command | cut -d ' ' -f 1)"
+    case "$client" in *thunderbird*|*icedove*)
         run_thunderbird "$client" "$1"
-    fi
+    esac
 
     if gio help open 2>/dev/null 1>&2; then
         DEBUG 1 "Running gio open \"$1\""
@@ -180,6 +182,31 @@ open_gnome()
     else
         DEBUG 1 "Running gnome-open \"$1\""
         gnome-open "$1"
+    fi
+
+    if [ $? -eq 0 ]; then
+        exit_success
+    else
+        exit_failure_operation_failed
+    fi
+}
+
+
+open_lxqt()
+{
+    local client
+    local desktop
+    desktop="$(qtxdg-mat def-email-client 2>/dev/null)"
+    client="$(desktop_file_to_binary "$desktop")"
+    echo "$client" | grep -E 'thunderbird|icedove' > /dev/null 2>&1
+    if [ $? -eq 0 ] ; then
+        run_thunderbird "$client" "$1"
+    fi
+
+    if qtxdg-mat open --help 2>/dev/null 1>&2; then
+        qtxdg-mat open "$1"
+    else
+        exit_failure_operation_impossible "no method available for opening '$1'"
     fi
 
     if [ $? -eq 0 ]; then
@@ -204,16 +231,16 @@ open_xfce()
 
 open_envvar()
 {
-    local OLDIFS="$IFS"
+    old_ifs="$IFS"
     IFS=:
     for i in $MAILER; do
-	IFS="$OLDIFS"
+	    IFS="$old_ifs"
 
-	eval "$i" '"$1"'
+	    eval "$i" '"$1"'
 
-	if [ $? -eq 0 ]; then
-	    exit_success
-	fi
+	    if [ $? -eq 0 ]; then
+	        exit_success
+	    fi
     done
 
     exit_failure_operation_failed
@@ -238,39 +265,14 @@ open_generic()
 {
     local client
     local desktop
-    desktop=`xdg-mime query default "x-scheme-handler/mailto"`
-    client=`desktop_file_to_binary "$desktop"`
-    echo $client | grep -E 'thunderbird|icedove' > /dev/null 2>&1
-    if [ $? -eq 0 ] ; then
+    desktop="$(xdg-mime query default "x-scheme-handler/mailto")"
+    client="$(desktop_file_to_binary "$desktop")"
+    case "$client" in *thunderbird*|*icedove*)
         run_thunderbird "$client" "$1"
-    fi
+    esac
 
     xdg-open "$1"
-    local ret=$?
-
-    # 3 means exit_failure_operation_impossible
-    if [ $ret != 3 ]; then
-        exit $ret
-    fi
-
-    IFS=":"
-    for browser in $BROWSER; do
-        if [ x"$browser" != x"" ]; then
-
-            browser_with_arg=`printf "$browser" "$1" 2>/dev/null`
-            if [ $? -ne 0 ]; then browser_with_arg=$browser;
-            fi
-
-            if [ x"$browser_with_arg" = x"$browser" ]; then "$browser" "$1";
-            else $browser_with_arg;
-            fi
-
-            if [ $? -eq 0 ]; then exit_success;
-            fi
-        fi
-    done
-
-    exit_failure_operation_impossible "no method available for opening '$1'"
+    exit $?
 }
 
 url_encode()
@@ -278,9 +280,10 @@ url_encode()
 # The shell needs the default internal field separator
 # otherwise it would search for $utf8 as a command in whole.
 IFS=" "
-str=$(echo "$1" | $utf8)
-local ORIG_LANG="$LANG"
-local ORIG_LC_ALL="$LC_ALL"
+str="$(echo "$1" | $utf8)"
+local ORIG_LANG ORIG_LC_ALL
+ORIG_LANG="$LANG"
+ORIG_LC_ALL="$LC_ALL"
 LANG=C
 LC_ALL=C
 result=$(echo "$str" | awk '
@@ -374,7 +377,7 @@ while [ $# -gt 0 ] ; do
             exit_failure_syntax "file argument missing for --attach option"
         fi
         check_input_file "$1"
-        file=`readlink -f "$1"` # Normalize path
+        file="$(xdg_realpath "$1")" # Normalize path
         if [ -z "$file" ] || [ ! -f "$file" ] ; then
             exit_failure_file_missing "file '$1' does not exist"
         fi
@@ -395,7 +398,7 @@ while [ $# -gt 0 ] ; do
       *@*)
         url_encode "$parm"
         if [ -z "${mailto}" ] ; then
-            mailto="mailto:"${result}"?"
+            mailto="mailto:${result}?"
         else
             options="${options}to=${result}&"
         fi
@@ -427,12 +430,12 @@ case $mailto in
 esac
 
 # Strip trailing ? and &
-mailto=`echo "${mailto}"| sed 's/[?&]$//'`
+mailto="$(echo "${mailto}"| sed 's/[?&]$//')"
 
 # Shouldn't happen
 [ x"${mailto}" != x"" ] || exit_failure_syntax
 
-if which @NAME@-hook.sh > /dev/null 2> /dev/null; then
+if command -v @NAME@-hook.sh > /dev/null; then
     @NAME@-hook.sh "${mailto}"
     if [ $? -eq 0 ]; then
         exit_success
@@ -451,14 +454,6 @@ if [ x"$MAILER" != x"" ]; then
     DE=envvar
 fi
 
-# if BROWSER variable is not set, check some well known browsers instead
-if [ x"$BROWSER" = x"" ]; then
-    BROWSER=www-browser:links2:elinks:links:lynx:w3m
-    if has_display; then
-        BROWSER=x-www-browser:firefox:iceweasel:seamonkey:mozilla:epiphany:konqueror:chromium-browser:google-chrome:$BROWSER
-    fi
-fi
-
 case "$DE" in
     envvar)
     open_envvar "${mailto}"
@@ -472,8 +467,12 @@ case "$DE" in
     open_gnome "${mailto}"
     ;;
 
-    gnome3|cinnamon|lxde|mate)
+    gnome3|cinnamon|lxde|mate|deepin)
     open_gnome3 "${mailto}"
+    ;;
+
+    lxqt)
+    open_lxqt "${mailto}"
     ;;
 
     xfce)
@@ -481,10 +480,10 @@ case "$DE" in
     ;;
 
     flatpak)
-    open_flatpak "$url"
+    open_flatpak "${mailto}"
     ;;
 
-    generic|lxqt|enlightenment)
+    generic|enlightenment)
     open_generic "${mailto}"
     ;;
 

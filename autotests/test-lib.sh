@@ -213,7 +213,7 @@ run() {
         XDG_CONFIG_DIRS=$XDG_CONFIG_DIRS \
         DISPLAY=x \
         BROWSER="$BROWSER" \
-        $trace ../scripts/$cmd "$@"
+        $trace ../scripts/$cmd "$@" ||:
 }
 
 echo "* Testing that $COMMAND_TESTED"
