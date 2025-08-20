@@ -18,13 +18,13 @@
 
 manualpage()
 {
-cat << _MANUALPAGE
+cat << '_MANUALPAGE'
 _MANUALPAGE
 }
 
 usage()
 {
-cat << _USAGE
+cat << '_USAGE'
 _USAGE
 }
 

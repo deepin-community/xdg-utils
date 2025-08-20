@@ -1,5 +1,3 @@
-# Patch originally authored by Nicholas Guriev <guriev-ns@ya.ru>
-# Modified by bluesky <chenchongbiao@deepin.org> on Mon, 22 Apr 2024 20:00:51 +0800
 Description: Collected Debian patches for xdg-utils
 Author: Nicholas Guriev <guriev-ns@ya.ru>
 
@@ -13,8 +11,8 @@ repository.
 
 ---
 
---- xdg-utils-1.1.3.orig/autotests/Makefile.in
-+++ xdg-utils-1.1.3/autotests/Makefile.in
+--- a/autotests/Makefile.in
++++ b/autotests/Makefile.in
 @@ -17,8 +17,9 @@ autotest: test
  remove-failed-tests:
  	rm -f failed-tests
@@ -26,109 +24,9 @@ repository.
  
  clean: remove-failed-tests
  	rm -fr lab
---- xdg-utils-1.1.3.orig/autotests/t-xdg-open.sh
-+++ xdg-utils-1.1.3/autotests/t-xdg-open.sh
-@@ -7,10 +7,10 @@ test_open_url() {
-     shift
-     local cmd=$1
- 
--    mock $cmd
--    run $de xdg-open http://www.freedesktop.org/
-+    mock "$cmd"
-+    run "$de" xdg-open http://www.freedesktop.org/
-     assert_run "$@" http://www.freedesktop.org/
--    unmock $cmd
-+    unmock "$cmd"
- }
- 
- mock_xdg_mime() {
-@@ -31,22 +31,21 @@ fi
- 
- test_generic_open_file() {
-     local filename="$1"
--    echo foo > "$LABDIR/$1"
--    mock_xdg_mime "$LABDIR/$1" text/plain textedit
-+    echo foo > "$LABDIR/$filename"
-+    mock_xdg_mime "$LABDIR/$filename" text/plain textedit
-     mock_desktop_file textedit %f
-     mock textedit
--    run generic xdg-open "$LABDIR/$1"
--    assert_run textedit "$LABDIR/$1"
-+    run generic xdg-open "$LABDIR/$filename"
-+    assert_run textedit "$LABDIR/$filename"
- }
- 
- test_that_it opens a URL with "gio open" in recent GNOME 3, and Cinnamon
--mock "gio open"
--test_open_url gnome3 "gio open"
--test_open_url cinnamon "gio open"
-+test_open_url gnome3 gio open
-+test_open_url cinnamon gio open
- 
- test_that_it opens a URL with gvfs-open if "gio open" is missing in GNOME 3, \
-              GNOME 2, and Cinnamon
--mock_missing "gio open"
-+mock_missing gio
- mock gvfs-open
- test_open_url gnome3 gvfs-open
- test_open_url gnome2 gvfs-open
-@@ -54,13 +53,13 @@ test_open_url cinnamon gvfs-open
- 
- test_that_it opens a URL with gnome-open if "gio open" and gvfs-open are \
-              missing in GNOME 2
--mock_missing "gio open"
-+mock_missing gio
- mock_missing gvfs-open
- test_open_url gnome2 gnome-open
- 
- test_that_it opens a URL with the generic method if "gio open" and gvfs-open \
-              are missing in GNOME 3, and Cinnamon
--mock_missing "gio open"
-+mock_missing gio
- mock_missing gvfs-open
- mock gnome-open
- mock_desktop_file mosaic %u
-@@ -70,7 +69,7 @@ test_open_url cinnamon mosaic
- 
- test_that_it opens a URL with the generic method if "gio open", gvfs-open and \
-              gnome-open are missing in GNOME 2
--mock_missing "gio open"
-+mock_missing gio
- mock_missing gvfs-open
- mock_missing gnome-open
- mock_desktop_file mosaic %u
-@@ -91,7 +90,7 @@ test_open_url mate gvfs-open
- 
- test_that_it opens a URL with mate-open if "gio open" and gvfs-open are \
-              missing in MATE
--mock_missing "gio open"
-+mock_missing gio
- mock_missing gvfs-open
- test_open_url mate mate-open
- 
-@@ -103,15 +102,15 @@ test_open_url enlightenment enlightenmen
- 
- test_that_it opens a file path with pcmanfm in LXDE
- mock pcmanfm
--touch $LABDIR/file.txt
--run lxde xdg-open $LABDIR/file.txt
--assert_run pcmanfm $(pwd)/$LABDIR/file.txt
-+touch "$LABDIR/file.txt"
-+run lxde xdg-open "$LABDIR/file.txt"
-+assert_run pcmanfm "$(pwd)/$LABDIR/file.txt"
- 
- test_that_it percent-decodes a file:// URL and opens it with pcmanfm in LXDE
- mock pcmanfm
--touch $LABDIR/file.txt
--run lxde xdg-open file://$(pwd)/$LABDIR/file%2etxt
--assert_run pcmanfm $(pwd)/$LABDIR/file.txt
-+touch "$LABDIR/file.txt"
-+run lxde xdg-open "file://$(pwd)/$LABDIR/file%2etxt"
-+assert_run pcmanfm "$(pwd)/$LABDIR/file.txt"
- 
- test_that_it opens files with spaces in their name in LXDE
- echo foo > "$LABDIR/test file.txt"
-@@ -129,13 +128,6 @@ mock_desktop_file mosaic %u
+--- a/autotests/t-xdg-open.sh
++++ b/autotests/t-xdg-open.sh
+@@ -133,13 +133,6 @@ mock_desktop_file mosaic %u
  mock_default_app x-scheme-handler/http mosaic
  test_open_url generic mosaic
  
@@ -142,7 +40,7 @@ repository.
  test_that_it works with multi-word \$BROWSER commands
  BROWSER="cyberdog --url %s"
  test_open_url generic cyberdog --url
-@@ -146,6 +138,15 @@ mock cyberdog
+@@ -150,6 +143,15 @@ mock cyberdog
  BROWSER="cyberdog --url %s"
  run generic xdg-open 'http://www.freedesktop.org/; echo BUSTED'
  assert_run cyberdog --url 'http://www.freedesktop.org/; echo BUSTED'
@@ -158,36 +56,8 @@ repository.
  
  test_that_it opens files in generic mode
  test_generic_open_file test.txt
-@@ -155,3 +156,27 @@ test_generic_open_file 'test#file.txt'
- 
- test_that_it opens files with spaces in their name in generic mode
- test_generic_open_file 'test file.txt'
-+
-+test_that_it can spawn a terminal if tty was not allocated
-+echo foobar content > "$LABDIR/sample.txt"
-+mock_terminal_app vim
-+mock_xdg_mime "$LABDIR/sample.txt" text/plain vim
-+mock x-terminal-emulator
-+mock zterm
-+DETACH=1
-+
-+unset TERMINAL
-+run generic xdg-open "$LABDIR/sample.txt"
-+assert_run x-terminal-emulator -e "$BINDIR/vim" "$LABDIR/sample.txt"
-+
-+TERMINAL="zterm"
-+run generic xdg-open "$LABDIR/sample.txt"
-+assert_run zterm -e "$BINDIR/vim" "$LABDIR/sample.txt"
-+
-+TERMINAL="zterm --args"
-+run generic xdg-open "$LABDIR/sample.txt"
-+assert_run zterm --args "$BINDIR/vim" "$LABDIR/sample.txt"
-+
-+DETACH=0  # terminal should not be invoked
-+run generic xdg-open "$LABDIR/sample.txt"
-+assert_run vim "$LABDIR/sample.txt"
---- xdg-utils-1.1.3.orig/autotests/test-lib.sh
-+++ xdg-utils-1.1.3/autotests/test-lib.sh
+--- a/autotests/test-lib.sh
++++ b/autotests/test-lib.sh
 @@ -140,6 +140,17 @@ Exec=$*
  EOF
  }
@@ -239,14 +109,14 @@ repository.
          XDG_CONFIG_DIRS=$XDG_CONFIG_DIRS \
          DISPLAY=x \
          BROWSER="$BROWSER" \
--        $trace ../scripts/$cmd "$@"
+-        $trace ../scripts/$cmd "$@" ||:
 +        TERMINAL="$TERMINAL" \
 +        $trace -c 'exec "$@"' - "$@" ||:
  }
  
  echo "* Testing that $COMMAND_TESTED"
 --- /dev/null
-+++ xdg-utils-1.1.3/autotests/ttyoff
++++ b/autotests/ttyoff
 @@ -0,0 +1,84 @@
 +#!/usr/bin/perl
 +
@@ -333,7 +203,7 @@ repository.
 +}
 +exec { $opt_a or $ARGV[0] } @ARGV or die $!;
 --- /dev/null
-+++ xdg-utils-1.1.3/autotests/ttyon
++++ b/autotests/ttyon
 @@ -0,0 +1,130 @@
 +#!/usr/bin/perl
 +
@@ -465,108 +335,19 @@ repository.
 +  push @ARGV, $ENV{SHELL} || "/bin/sh";
 +}
 +exec { $opt_a or $ARGV[0] } @ARGV or die $!;
---- xdg-utils-1.1.3.orig/scripts/Makefile.in
-+++ xdg-utils-1.1.3/scripts/Makefile.in
-@@ -9,6 +9,7 @@ XMLTO           = @XMLTO@
- 
- prefix          = @prefix@
- exec_prefix     = @exec_prefix@
-+datarootdir     = @datarootdir@
- bindir          = @bindir@
- mandir          = @mandir@
- 
---- xdg-utils-1.1.3.orig/scripts/xdg-email.in
-+++ xdg-utils-1.1.3/scripts/xdg-email.in
-@@ -91,13 +91,13 @@ open_kde()
-     fi
- 
-     if which $kreadconfig >/dev/null 2>&1; then
--        local profile=$($kreadconfig --file emaildefaults \
--                                     --group Defaults --key Profile)
-+        local profile="$($kreadconfig --file emaildefaults \
-+                                      --group Defaults --key Profile)"
-         if [ -n "$profile" ]; then
--            local client=$($kreadconfig --file emaildefaults \
--                                        --group "PROFILE_$profile" \
--                                        --key EmailClient \
--                                  | cut -d ' ' -f 1)
-+            local client="$($kreadconfig --file emaildefaults \
-+                                         --group "PROFILE_$profile" \
-+                                         --key EmailClient \
-+                                  | cut -d ' ' -f 1)"
- 
-             if echo "$client" | grep -Eq 'thunderbird|icedove'; then
-                 run_thunderbird "$client" "$1"
-@@ -472,7 +472,7 @@ case "$DE" in
-     open_gnome "${mailto}"
-     ;;
- 
--    gnome3|cinnamon|lxde|mate)
-+    gnome3|cinnamon|lxde|mate|deepin)
-     open_gnome3 "${mailto}"
-     ;;
- 
---- xdg-utils-1.1.3.orig/scripts/xdg-mime.in
-+++ xdg-utils-1.1.3/scripts/xdg-mime.in
-@@ -247,6 +247,7 @@ make_default_generic()
-     default_file="$xdg_config_home/mimeapps.list"
+--- a/scripts/xdg-mime.in
++++ b/scripts/xdg-mime.in
+@@ -306,6 +306,7 @@ make_default_generic()
      DEBUG 2 "make_default_generic $1 $2"
-     DEBUG 1 "Updating $default_file"
+     DEBUG 1 "Updating $out_file"
+     [ -f "$out_file" ] || touch "$out_file"
 +    [ -d "$xdg_config_home" ] || mkdir -p "$xdg_config_home"
-     [ -f "$default_file" ] || touch "$default_file"
      awk -v mimetype="$2" -v application="$1" '
      BEGIN {
-@@ -305,7 +306,7 @@ search_desktop_file()
- 
-     grep -l "$MIME;" "$dir/"*.desktop 2>/dev/null
- 
--    for f in $dir/*/; do
-+    for f in "$dir/"*/; do
-       [ -d "$f" ] && search_desktop_file "$MIME" "$f"
-     done
- }
---- xdg-utils-1.1.3.orig/scripts/xdg-open.in
-+++ xdg-utils-1.1.3/scripts/xdg-open.in
-@@ -142,7 +142,7 @@ open_kde()
-     fi
- }
- 
--open_dde()
-+open_deepin()
- {
-     if dde-open -version >/dev/null 2>&1; then
-         dde-open "$1"
-@@ -320,14 +320,27 @@ search_desktop_file()
-             args=$(( $args - 1 ))
-         done
-         [ $replaced -eq 1 ] || set -- "$@" "$target"
--        "$command_exec" "$@"
-+
-+        local term_run=
-+        if [ "$(get_key "$file" Terminal)" = true ] && ! ( : <>/dev/tty ) 2>/dev/null; then
-+            if [ -z "$TERMINAL" ]; then
-+                term_run="x-terminal-emulator -e"
-+            elif echo "$TERMINAL" | grep -q -v '\s'; then
-+                term_run="$TERMINAL -e"
-+            else
-+                term_run="$TERMINAL"
-+            fi
-+        fi
-+        $term_run "$command_exec" "$@"
- 
-         if [ $? -eq 0 ]; then
-             exit_success
-+        else
-+            exit_failure_operation_failed
-         fi
-     fi
- 
--    for d in $dir/*/; do
-+    for d in "$dir/"*/; do
-         [ -d "$d" ] && search_desktop_file "$default" "$d" "$target"
-     done
- }
-@@ -366,13 +379,9 @@ open_generic_xdg_x_scheme_handler()
+         prefix=mimetype "="
+--- a/scripts/xdg-open.in
++++ b/scripts/xdg-open.in
+@@ -420,13 +420,9 @@ open_generic_xdg_x_scheme_handler()
      fi
  }
  
@@ -579,16 +360,18 @@ repository.
  {
 +    local url="$1"
      local oldifs="$IFS"
-     local browser browser_with_arg
+     local browser
  
-@@ -385,12 +394,15 @@ open_envvar()
+@@ -439,14 +435,18 @@ open_envvar()
          fi
  
          if echo "$browser" | grep -q %s; then
 -            # Avoid argument injection.
 +            # Use loop to insert URL for avoid argument injection.
              # See https://bugs.freedesktop.org/show_bug.cgi?id=103807
--            # URIs don't have IFS characters spaces anyway.
+             # URIs don't have IFS characters spaces anyway.
+             # shellcheck disable=SC2086,SC2091,SC2059
+             # All the scary things here are intentional
 -            has_single_argument $1 && $(printf "$browser" "$1")
 +            shift $#
 +            for arg in $browser; do
@@ -601,37 +384,9 @@ repository.
          fi
  
          if [ $? -eq 0 ]; then
-@@ -451,7 +463,7 @@ open_lxde()
- {
- 
-     # pcmanfm only knows how to handle file:// urls and filepaths, it seems.
--    if pcmanfm --help >/dev/null 2>&1 -a is_file_url_or_path "$1"; then
-+    if pcmanfm --help >/dev/null 2>&1 && is_file_url_or_path "$1"; then
-         local file="$(file_url_to_path "$1")"
- 
-         # handle relative paths
-@@ -524,8 +536,8 @@ case "$DE" in
-     open_kde "$url"
-     ;;
- 
--    dde)
--    open_dde "$url"
-+    deepin)
-+    open_deepin "$url"
-     ;;
- 
-     gnome3|cinnamon)
---- xdg-utils-1.1.3.orig/scripts/xdg-screensaver.in
-+++ xdg-utils-1.1.3/scripts/xdg-screensaver.in
-@@ -468,6 +468,7 @@ screensaver_gnome_screensaver()
-         perl -e '
- use strict;
- use warnings;
-+use Encode qw(decode);
- use IO::File;
- use Net::DBus;
- use X11::Protocol;
-@@ -479,8 +480,9 @@ my $x = X11::Protocol->new();
+--- a/scripts/xdg-screensaver.in
++++ b/scripts/xdg-screensaver.in
+@@ -461,8 +461,9 @@ my $x = X11::Protocol->new();
  my $named_window_id = hex($window_id);
  my $window_name;
  while (1) {
@@ -643,59 +398,3 @@ repository.
    last if defined($window_name) && $window_name ne "";
    (undef, $named_window_id) = $x->QueryTree($named_window_id);
    if (!defined($named_window_id)) {
-@@ -489,6 +491,10 @@ while (1) {
-   }
- }
- 
-+# Replace any invalid unicode characters with U+FFFD, so we dont crash when we
-+# pass them over to D-Bus
-+$window_name = decode("utf8", $window_name, Encode::FB_DEFAULT);
-+
- # Inhibit idle detection (flags = 8) with window name and ID.
- # We have no reason so just send the window name again.
- my $bus = Net::DBus->session();
-@@ -887,6 +893,8 @@ xscreensaver-command -version 2> /dev/nu
- dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.gnome.ScreenSaver > /dev/null 2>&1 && DE="gnome_screensaver"
- # Consider "mate-screensaver" a separate DE
- dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.mate.ScreenSaver > /dev/null 2>&1 && DE="mate_screensaver"
-+# Consider "cinnamon-screensaver" a separate DE
-+dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.cinnamon.ScreenSaver > /dev/null 2>&1 && DE="cinnamon"
- # Consider "xautolock" a separate DE
- xautolock -enable > /dev/null 2>&1 && DE="xautolock_screensaver"
- 
---- xdg-utils-1.1.3.orig/scripts/xdg-utils-common.in
-+++ xdg-utils-1.1.3/scripts/xdg-utils-common.in
-@@ -62,9 +62,9 @@ desktop_file_to_binary()
-         if [ "${desktop#*-}" != "$desktop" ]; then
-             vendor=${desktop%-*}
-             app=${desktop#*-}
--            if [ -r $dir/applications/$vendor/$app ]; then
-+            if [ -r "$dir/applications/$vendor/$app" ]; then
-                 file_path=$dir/applications/$vendor/$app
--            elif [ -r $dir/applnk/$vendor/$app ]; then
-+            elif [ -r "$dir/applnk/$vendor/$app" ]; then
-                 file_path=$dir/applnk/$vendor/$app
-             fi
-         fi
-@@ -288,9 +288,8 @@ detectDE()
-          KDE)
-            DE=kde;
-            ;;
--         # Deepin Desktop Environments
--         DEEPIN|Deepin|deepin)
--           DE=dde;
-+         DEEPIN|Deepin|deepin|DDE)
-+           DE=deepin;
-            ;;
-          LXDE)
-            DE=lxde;
---- xdg-utils-1.1.3.orig/tests/Makefile.in
-+++ xdg-utils-1.1.3/tests/Makefile.in
-@@ -10,7 +10,6 @@ XMLTO           = @XMLTO@
- prefix          = @prefix@
- exec_prefix     = @exec_prefix@
- bindir          = @bindir@
--mandir          = @mandir@
- 
- all:
- 

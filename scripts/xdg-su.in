@@ -19,13 +19,13 @@
 
 manualpage()
 {
-cat << _MANUALPAGE
+cat << '_MANUALPAGE'
 _MANUALPAGE
 }
 
 usage()
 {
-cat << _USAGE
+cat << '_USAGE'
 _USAGE
 }
 
@@ -36,7 +36,7 @@ su_kde()
     if [ x"$KDE_SESSION_VERSION" = x"4" ]; then
         KDESU=`kde4-config --locate kdesu --path exe 2>/dev/null`
     else
-        KDESU=`which kdesu 2>/dev/null`
+        KDESU=`command -v kdesu`
     fi
     if [ $? -eq 0 ] ; then
         if [ -z "$user" ] ; then
@@ -57,9 +57,9 @@ su_kde()
 
 su_gnome()
 {
-    GSU=`which gnomesu 2>/dev/null`
+    GSU=`command -v gnomesu`
     if [ $? -ne 0 ] ; then
-        GSU=`which xsu 2>/dev/null`
+        GSU=`command -v xsu`
     fi
     if [ $? -eq 0 ] ; then
         if [ -z "$user" ] ; then
@@ -80,11 +80,11 @@ su_gnome()
 
 su_lxqt()
 {
-    LXQTSU=`which lxqt-sudo 2>/dev/null`
+    LXQTSU=`command -v lxqt-sudo`
     if [ $? -eq 0 ] ; then
         if [ -z "$user" ] ; then
              # -s option runs as su rather then sudo
-             $LXQTSU -s "$cmd"
+             $LXQTSU -s $cmd
         else
              # lxqt-sudo does not support specifying a user
              su_generic
@@ -104,7 +104,7 @@ su_enlightenment()
 {
 # Enlightenment doesn't have any reasonably working su/sudo graphical interface
 # but terminology works as a drop in replacement for xterm and has a matching theme
-    if which terminology >/dev/null ; then
+    if command -v terminology >/dev/null ; then
         if [ -z "$user" ] ; then
             terminology -g 60x5 -T "xdg-su: $cmd" -e "su -c '$cmd'"
         else
@@ -138,7 +138,7 @@ su_generic()
 
 su_xfce()
 {
-    if which gnomesu &>/dev/null ; then
+    if command -v gnomesu >/dev/null ; then
         su_gnome
     else
         su_generic
@@ -187,7 +187,7 @@ fi
 detectDE
 
 if [ x"$DE" = x"" ]; then
-    XSU=`which xterm 2>/dev/null`
+    XSU=`command -v xterm`
     if [ $? -eq 0 ] ; then
         DE=generic
     fi
@@ -198,7 +198,7 @@ case "$DE" in
     su_kde
     ;;
 
-    gnome*|cinnamon|lxde|mate)
+    gnome*|cinnamon|lxde|mate|deepin)
     su_gnome
     ;;
 

@@ -14,13 +14,13 @@
 
 manualpage()
 {
-cat << _MANUALPAGE
+cat << '_MANUALPAGE'
 _MANUALPAGE
 }
 
 usage()
 {
-cat << _USAGE
+cat << '_USAGE'
 _USAGE
 }
 
@@ -36,9 +36,9 @@ else
    # No secure moves available, use home dir
    DEBUG 1 "mv -T not available"
    MV="mv"
-   screensaver_file="$HOME/.xdg-screensaver-"`echo $(hostname)-$DISPLAY | sed 's/:/-/g'`
+   screensaver_file="$HOME/.xdg-screensaver-"`echo "$(hostname)"-$DISPLAY | sed 's/:/-/g'`
 fi
-lockfile_command=`which lockfile 2> /dev/null`
+lockfile_command=`command -v lockfile`
 
 lockfile()
 {
@@ -94,6 +94,11 @@ perform_action()
         screensaver_kde3 "$1"
       fi
       ;;
+
+    gnome3)
+      screensaver_freedesktop "$1"
+      ;;
+
     gnome_screensaver)
       screensaver_gnome_screensaver "$1"
       ;;
@@ -123,7 +128,7 @@ perform_action()
       ;;
   esac
 
-  if [ -n "$DISPLAY" -a "$1" = "suspend" ] ; then
+  if [ -n "$DISPLAY" ] && [ "$1" = "suspend" ] ; then
       # Save DPMS state
       if xset -q | grep 'DPMS is Enabled' > /dev/null 2> /dev/null; then
           test "${TMPDIR+set}" = set || TMPDIR=/tmp
@@ -166,7 +171,7 @@ do_resume()
   cleanup_suspend
 }
 
-XPROP=`which xprop 2> /dev/null`
+XPROP=`command -v xprop`
 
 check_window_id()
 {
@@ -236,33 +241,13 @@ screensaver_freedesktop()
 {
     case "$1" in
         suspend)
-        dbus-send --session \
-                  --dest=org.freedesktop.ScreenSaver \
-                  --type=method_call \
-                  --print-reply \
-                  --reply-timeout=2000 \
-                  /ScreenSaver \
-                  org.freedesktop.ScreenSaver.Inhibit \
-                  string:$window_id \
-                  string:xdg-screensaver \
-                  | grep uint32 | cut -d ' ' -f 5 >| "$screensaver_file.cookie" \
-                  2> /dev/null
-        result=$?
+        screensaver_dbus_process $window_id $screensaver_file "org.freedesktop.ScreenSaver" "/ScreenSaver"
+        result=0
         ;;
 
         resume)
-        if [ -f "$screensaver_file.cookie" ] ; then
-            value=`cat "$screensaver_file.cookie"`
-            dbus-send --session \
-                      --dest=org.freedesktop.ScreenSaver \
-                      --type=method_call \
-                      /ScreenSaver \
-                      org.freedesktop.ScreenSaver.UnInhibit \
-                      uint32:$value \
-                      2> /dev/null
-            rm -f "$screensaver_file.cookie"
-        fi
-        result=$?
+        # Automatic resume when $screensaver_file disappears
+        result=0
         ;;
 
         activate)
@@ -283,34 +268,34 @@ screensaver_freedesktop()
                   /ScreenSaver \
                   org.freedesktop.ScreenSaver.Lock \
                   2> /dev/null
+        result=$?
         ;;
 
         reset)
-        if [ -f "$screensaver_file.cookie" ] ; then
-            value=`cat "$screensaver_file.cookie"`
-            dbus-send --session \
-                      --dest=org.freedesktop.ScreenSaver \
-                      --type=method_call \
-                      /ScreenSaver \
-                      org.freedesktop.ScreenSaver.UnInhibit \
-                      uint32:$value \
-                      2> /dev/null
-            rm -f "$screensaver_file.cookie"
-        fi
+        dbus-send --session \
+                  --dest=org.freedesktop.ScreenSaver \
+                  --type=method_call \
+                  /ScreenSaver \
+                  org.freedesktop.ScreenSaver.SimulateUserActivity \
+                  2> /dev/null
         result=$?
         ;;
 
         status)
-        status=`dbus-send --session \
+        raw_status=`dbus-send --session \
                           --dest=org.freedesktop.ScreenSaver \
                           --type=method_call \
                           --print-reply \
                           --reply-timeout=2000 \
                           /ScreenSaver \
-                          org.freedesktop.ScreenSaver.GetActive \
-                          | grep boolean | cut -d ' ' -f 5`
+                          org.freedesktop.ScreenSaver.GetActive`
         result=$?
-        if [ x"$status" = "xtrue" -o x"$status" = "xfalse" ]; then
+        status=
+        if [ x"$result" = "x0" ]; then
+            status=`echo "$raw_status" | grep boolean | cut -d ' ' -f 5`
+            result=$?
+        fi
+        if [ x"$status" = "xtrue" ] || [ x"$status" = "xfalse" ]; then
             echo "enabled"
         elif [ x"$result" != "x0" ]; then
             echo "ERROR: dbus org.freedesktop.ScreenSaver.GetActive returned '$status'" >&2
@@ -459,20 +444,17 @@ screensaver_suspend_loop()
   (while [ -f "$screensaver_file" ]; do $*; sleep 50; done) > /dev/null 2> /dev/null &
 }
 
-screensaver_gnome_screensaver()
+screensaver_dbus_process ()
 {
-# DBUS interface for gnome-screensaver
-# http://people.gnome.org/~mccann/gnome-screensaver/docs/gnome-screensaver.html
-    case "$1" in
-        suspend)
-        perl -e '
+  perl -e '
 use strict;
 use warnings;
+use Encode qw(decode);
 use IO::File;
 use Net::DBus;
 use X11::Protocol;
 
-my ($window_id, $screensaver_file) = @ARGV;
+my ($window_id, $screensaver_file, $dbus_service, $dbus_path) = @ARGV;
 
 # Find window name to pass to session manager.
 my $x = X11::Protocol->new();
@@ -489,12 +471,15 @@ while (1) {
   }
 }
 
+# Replace any invalid unicode characters with U+FFFD, so we dont crash when we
+# pass them over to D-Bus
+$window_name = decode("utf8", $window_name, Encode::FB_DEFAULT);
+
 # Inhibit idle detection (flags = 8) with window name and ID.
 # We have no reason so just send the window name again.
 my $bus = Net::DBus->session();
-my $sm_svc = $bus->get_service("org.gnome.SessionManager");
-my $sm = $sm_svc->get_object("/org/gnome/SessionManager",
-			     "org.gnome.SessionManager");
+my $sm_svc = $bus->get_service($dbus_service);
+my $sm = $sm_svc->get_object($dbus_path, $dbus_service);
 $sm->Inhibit($window_name, hex($window_id), $window_name, 8);
 
 # Wait until removed from the status file.
@@ -511,7 +496,16 @@ while (1) {
   }
   exit 0 unless $found;
 }
-' $window_id $screensaver_file &
+' "$1" "$2" "$3" "$4" &
+  }
+
+screensaver_gnome_screensaver()
+{
+# DBUS interface for gnome-screensaver
+# http://people.gnome.org/~mccann/gnome-screensaver/docs/gnome-screensaver.html
+    case "$1" in
+        suspend)
+        screensaver_dbus_process $window_id $screensaver_file "org.gnome.SessionManager" "/org/gnome/SessionManager"
         result=0
         ;;
 
@@ -562,7 +556,7 @@ while (1) {
                           org.gnome.ScreenSaver.GetActive \
                           | grep boolean | cut -d ' ' -f 5`
         result=$?
-        if [ x"$status" = "xtrue" -o x"$status" = "xfalse" ]; then
+        if [ x"$status" = "xtrue" ] || [ x"$status" = "xfalse" ]; then
             echo "enabled"
         elif [ x"$result" != "x0" ]; then
             echo "ERROR: dbus org.gnome.ScreenSaver.GetActive returned '$status'" >&2
@@ -638,7 +632,7 @@ screensaver_mate_screensaver()
                           org.mate.ScreenSaver.GetActive \
                           | grep boolean | cut -d ' ' -f 5`
         result=$?
-        if [ x"$status" = "xtrue" -o x"$status" = "xfalse" ]; then
+        if [ x"$status" = "xtrue" ] || [ x"$status" = "xfalse" ]; then
             echo "enabled"
         elif [ x"$result" != "x0" ]; then
             echo "ERROR: dbus org.mate.ScreenSaver.GetActive returned '$status'" >&2
@@ -887,6 +881,8 @@ xscreensaver-command -version 2> /dev/null | grep XScreenSaver > /dev/null && DE
 dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.gnome.ScreenSaver > /dev/null 2>&1 && DE="gnome_screensaver"
 # Consider "mate-screensaver" a separate DE
 dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.mate.ScreenSaver > /dev/null 2>&1 && DE="mate_screensaver"
+# Consider "cinnamon-screensaver" a separate DE
+dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.cinnamon.ScreenSaver > /dev/null 2>&1 && DE="cinnamon"
 # Consider "xautolock" a separate DE
 xautolock -enable > /dev/null 2>&1 && DE="xautolock_screensaver"
 

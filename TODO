@@ -16,9 +16,6 @@ General
 * Add xdg-autostart
 
 xdg-su:
-* The summary is incorrect, it suggests that it can only run things as
-root which is incorrect according to the main body of the document.
-* The -c option is listed in the synopsis, but not in options.
 * It would be useful if it was possible to distinguish between a failure
 because of a bad password or some other failure.
 * use sudo style syntax, drop -c option

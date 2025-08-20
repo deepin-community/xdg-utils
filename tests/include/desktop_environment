@@ -2,8 +2,7 @@
 
 ## This script modified from one supplied by Bryce Harrington at OSDL
 
-which kde-config >/dev/null 2>&1
-if [ "$?" -eq 0 ]; then
+if command -v kde-config >/dev/null; then
 	# From Sutoka on FreeNode/#kde
 	kde_version=`kde-config --version | grep KDE | cut -d' ' -f2 2> /dev/null`
 	kde_running=$KDE_FULL_SESSION
@@ -16,8 +15,7 @@ else
 fi
 
 # From kees on #osdl
-which gnome-session >/dev/null 2>&1
-if [ "$?" -eq 0 ] ; then
+if command -v gnome-session >/dev/null ; then
     gnome_version=`gnome-session --version | cut -d ' ' -f3 2>/dev/null`
     echo "gnome: $gnome_version"
 
@@ -28,8 +26,7 @@ else
     echo "gnome: not present (didn't find gnome-session)"
 fi
 
-which xfce4-session >/dev/null 2>&1
-if [ "$?" -eq 0 ] ; then 
+if command -v xfce4-session >/dev/null ; then
         xfce_version=`xfce4-session --version | grep '(Xfce ' | cut -d '(' -f 2 | cut -d ' ' -f2 | cut -d ')' -f1`
 	# From massonnet on FreeNode/#xfce
 	#if [ `pidof xfce4-session` ]; then
@@ -53,4 +50,3 @@ if [ `whoami` = 'root' ] ; then
 else
 	echo "user: normal"
 fi
-

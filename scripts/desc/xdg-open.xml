@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl"
    href="http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl"?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+    "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
 ]>
 <refentry id="xdg-open">
   <refentryinfo>
@@ -64,6 +64,14 @@
       xdg-open is for use inside a desktop session only.
       It is not recommended to use xdg-open as root.
     </para>
+    <para>
+	  As xdg-open can not handle arguments that begin with a <quote>-</quote> it is recommended to pass filepaths in one of the following ways:
+    </para>
+	  <itemizedlist>
+		  <listitem><para>Pass absolute paths, i.e. by using <command>realpath</command> as a preprocessor.</para></listitem>
+		  <listitem><para>Prefix known relative filepaths with a <quote>./</quote>. For example using <code>sed -E 's|^[^/]|./\0|'</code>.</para></listitem>
+		  <listitem><para>Pass a file URL.</para></listitem>
+	  </itemizedlist>
   </refsect1>
   <refsect1 id="options">
     <title>Options</title>
@@ -136,6 +144,27 @@
 	</listitem>
       </varlistentry>
     </variablelist>
+    <para>
+	  In case of success the process launched from the .desktop file will not be forked off and therefore may result in xdg-open running for a very long time. This behaviour intentionally differs from most desktop specific openers to allow terminal based applications to run using the same terminal xdg-open was called from.
+    </para>
+  </refsect1>
+  <refsect1 id="reporting-issues">
+    <title>Reporting Issues</title>
+    <para>
+	  Please keep in mind <command>xdg-open</command> inherits most of the flaws of its configuration and the underlying opener.
+    </para>
+    <para>
+      In case the command <code>xdg-mime query default "$(xdg-mime query filetype path/to/troublesome_file)"</code> names the program responsible for any unexpected behaviour you can fix that by setting a different handler. (If the program is broken let the developers know)
+    </para>
+    <para>
+       Also see the security note on <citerefentry><refentrytitle>xdg-mime</refentrytitle><manvolnum>1</manvolnum></citerefentry> for the <code>default</code> subcommand.
+    </para>
+    <para>
+	   If a flaw is reproducible using the desktop specific opener (and isn't a configuration issue): Please report to whoever is responsible for that first (reporting to xdg-utils is better than not reporting at all, but since the xdg-utils are maintained in very little spare time a fix will take much longer)
+    </para>
+    <para>
+      In case an issue specific to xdg-open please report it to <uri>https://gitlab.freedesktop.org/xdg/xdg-utils/-/issues</uri> .
+    </para>
   </refsect1>
   <refsect1 id="seealso">
     <title>See Also</title>

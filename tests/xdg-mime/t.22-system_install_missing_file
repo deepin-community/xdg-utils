@@ -5,7 +5,7 @@
 . "$XDG_TEST_DIR/include/testcontrol.sh"
 
 test_system_install_missing_file() {
-INPUT_FILE='non-existant-file.xml'
+INPUT_FILE='non-existent-file.xml'
 
 test_start "$FUNCNAME: install mime type as system with missing file $INPUT_FILE"
 test_purpose "Verify that the correct error is generated when the mime file is missing."

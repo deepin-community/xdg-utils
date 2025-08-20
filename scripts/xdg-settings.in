@@ -14,13 +14,13 @@
 
 manualpage()
 {
-cat << _MANUALPAGE
+cat << '_MANUALPAGE'
 _MANUALPAGE
 }
 
 usage()
 {
-cat << _USAGE
+cat << '_USAGE'
 _USAGE
 }
 
@@ -98,7 +98,7 @@ xdg_mime_fixup()
     # further processes need it around. But since it does not close its stdout,
     # the shell (via grep) will wait around for kdeinit to exit. If we start a
     # copy here, that copy will be used in xdg-mime and we will avoid waiting.
-    if [ "$DE" = kde -a -z "$XDG_MIME_FIXED" ]; then
+    if [ "$DE" = kde ] && [ -z "$XDG_MIME_FIXED" ]; then
         ktradertest text/html Application > /dev/null 2>&1
         # Only do this once, as we only need it once.
         XDG_MIME_FIXED=yes
@@ -130,7 +130,7 @@ set_browser_mime()
     fix_local_desktop_file "$1" "$MIME" || return
     mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/applications"
     xdg-mime default "$1" "$MIME" || return
-    if [ x"`get_browser_mime`" != x"$1" ]; then
+    if [ x"`get_browser_mime $MIME`" != x"$1" ]; then
         # Put back the original value
         xdg-mime default "$orig" "$MIME"
         exit_failure_operation_failed
@@ -148,6 +148,8 @@ read_kde_config()
     configkey="$3"
     if [ x"${KDE_SESSION_VERSION}" = x"5" ]; then
         application="`kreadconfig5 --file $configfile --group $configsection --key $configkey`"
+    elif [ x"${KDE_SESSION_VERSION}" = x"6" ]; then
+        application="`kreadconfig6 --file $configfile --group $configsection --key $configkey`"
     else
         application="`kreadconfig --file $configfile --group $configsection --key $configkey`"
     fi
@@ -203,7 +205,14 @@ resolve_kde_browser_desktop()
 
 read_kde_browser()
 {
-    read_kde_config kdeglobals General BrowserApplication
+    # since Plasma >= 5.19
+    ret=`get_browser_mime "x-scheme-handler/http"`
+    if [ -z "$ret" ]; then
+        # older Plasma versions
+        ret=`read_kde_config kdeglobals General BrowserApplication`
+    fi
+    
+    echo $ret
 }
 
 get_browser_kde()
@@ -228,15 +237,15 @@ check_browser_kde()
     binary="`resolve_kde_browser`"
 
     # The browser may contain a relative entry to the binary starting with !
-    if [ x"!" == x"${browser:0:1}" ]; then
+    case "$browser" in !*)
         # get the full path
-        browser="`binary_to_desktop_file ${browser:1}`"
+        browser="`binary_to_desktop_file ${browser#!}`"
         binary="`desktop_file_to_binary $browser`"
-    fi
+    esac
 
     # Because KDE will use the handler for MIME type text/html if this value
     # is empty, we allow either the empty string or a match to $check here.
-    if [ x"$binary" != x -a x"$binary" != x"$check" ]; then
+    if [ x"$binary" != x ] && [ x"$binary" != x"$check" ]; then
         echo no
         exit_success
     fi
@@ -252,15 +261,61 @@ check_browser_kde()
 
 set_browser_kde()
 {
-    set_browser_mime "$1" || return
+    # Set the default browser.
+    for protocol in http https; do
+        set_browser_mime "$1" "x-scheme-handler/$protocol" || return
+    done
+
+    # Plasma < 5.19
+    set_browser_mime "$1" "text/html" || return
     if [ x"${KDE_SESSION_VERSION}" = x"5" ]; then
         kwriteconfig5 --file kdeglobals --group General --key BrowserApplication "$1"
+    elif [ x"${KDE_SESSION_VERSION}" = x"6" ]; then
+        kwriteconfig6 --file kdeglobals --group General --key BrowserApplication "$1"
     else
         kwriteconfig --file kdeglobals --group General --key BrowserApplication "$1"
     fi
 }
 
 # }}} KDE
+# {{{ Deepin
+
+read_deepin_browser()
+{
+    dbus-send --print-reply=literal --dest=com.deepin.daemon.Mime /com/deepin/daemon/Mime com.deepin.daemon.Mime.GetDefaultApp string:"x-scheme-handler/http" | jq -r '.Id'
+}
+
+get_browser_deepin()
+{
+    browser="$(read_deepin_browser)"
+    if [ -n "$browser" ]; then
+        echo "$browser"
+        exit_success
+    else
+        exit_failure_operation_failed
+    fi
+}
+
+check_browser_deepin()
+{
+    if [ "$(read_deepin_browser)" = "$1" ]; then
+        exit_success
+    else
+        exit_failure_operation_failed
+    fi
+}
+
+set_browser_deepin()
+{
+    xdg-mime default "$1" x-scheme-handler/http x-scheme-handler/ftp x-scheme-handler/https text/html text/xml text/xhtml_xml text/xhtml+xml
+    if [ $? -ne 0 ]; then
+        exit_failure_operation_failed
+    else
+        exit_success
+    fi
+}
+
+# }}} Deepin
 # {{{ GNOME
 
 get_browser_gnome()
@@ -370,6 +425,49 @@ set_browser_gnome3()
     done
 }
 # }}} GNOME 3.x
+# {{{ LXQt
+
+get_browser_lxqt()
+{
+    if qtxdg-mat def-web-browser --help 2> /dev/null 1>&2; then
+        qtxdg-mat def-web-browser 2>/dev/null
+    else
+        exit_failure_operation_impossible "no method for getting the default browser"
+    fi
+}
+
+check_browser_lxqt()
+{
+    desktop="$1"
+    check="`desktop_file_to_binary "$1"`"
+    if [ -z "$check" ]; then
+        echo no
+        exit_success
+    fi
+
+    if qtxdg-mat def-web-browser --help 2>/dev/null 1>&2; then
+        browser="`qtxdg-mat def-web-browser`" 2>/dev/null
+        if [ x"$browser" != x"$desktop" ]; then
+            echo no
+            exit_success
+        fi
+    else
+        exit_failure_operation_impossible "no method for checking the default browser"
+    fi
+}
+
+set_browser_lxqt()
+{
+    binary="`desktop_file_to_binary "$1"`"
+    [ "$binary" ] || exit_failure_file_missing
+    set_browser_mime "$1" || return
+
+    # Set the default browser.
+    for protocol in http https about unknown; do
+        set_browser_mime "$1" "x-scheme-handler/$protocol" || return
+    done
+}
+# }}} LXQt
 # {{{ xfce
 
 get_browser_xfce()
@@ -478,7 +576,7 @@ get_browser_generic()
     if [ -n "$BROWSER" ]; then
         local browser=$(binary_to_desktop_file "${BROWSER%%:*}")
         if [ -n "$browser" ]; then
-            echo "$(basename "$browser")"
+            basename "$browser"
             return 0
         fi
     fi
@@ -490,7 +588,7 @@ get_browser_generic()
     # Debian and derivatives have x-www-browser
     local browser=$(binary_to_desktop_file x-www-browser)
     if [ -n "$browser" ]; then
-        echo "$(basename "$browser")"
+        basename "$browser"
         return 0
     fi
 
@@ -581,14 +679,14 @@ check_url_scheme_handler_kde()
         echo no
         exit_success
     fi
-    if [ x"$1" = "mailto" ]; then
+    if [ "$1" = "mailto" ]; then
         binary="`read_kde_config emaildefaults PROFILE_Default EmailClient`"
         # The field may contain a relative entry to the binary starting with !
-        if [ x"!" == x"${binary:0:1}" ]; then
+        case "$browser" in !*)
             # get the full path
-            desktop_file="`binary_to_desktop_file ${binary:1}`"
+            desktop_file="`binary_to_desktop_file ${binary#!}`"
             binary="`desktop_file_to_binary $desktop_file`"
-        fi
+        esac
         if [ x"$binary" != x"$check" ]; then
             echo no
             exit_success
@@ -612,6 +710,8 @@ set_url_scheme_handler_kde()
         binary="`desktop_file_to_binary "$2"`"
         if [ x"${KDE_SESSION_VERSION}" = x"5" ]; then
             kwriteconfig5 --file emaildefaults --group PROFILE_Default --key EmailClient "$binary"
+        elif [ x"${KDE_SESSION_VERSION}" = x"6" ]; then
+            kwriteconfig6 --file emaildefaults --group PROFILE_Default --key EmailClient "$binary"
         else
             kwriteconfig --file emaildefaults --group PROFILE_Default --key EmailClient "$binary"
         fi
@@ -660,6 +760,48 @@ set_url_scheme_handler_gnome()
 }
 
 # }}} GNOME
+# {{{ LXQt
+
+get_url_scheme_handler_lxqt()
+{
+    if qtxdg-mat defapp --help 2> /dev/null 1>&2; then
+        qtxdg-mat defapp "x-scheme-handler/$1" 2> /dev/null
+    else
+        exit_failure_operation_impossible "no method for getting the url_scheme_handler"
+    fi
+}
+
+check_url_scheme_handler_lxqt()
+{
+    desktop="$2"
+    check="`desktop_file_to_binary "$2"`"
+    if [ -z "$check" ]; then
+        echo no
+        exit_success
+    fi
+
+    if qtxdg-mat defapp --help 2> /dev/null 1>&2; then
+        handler="`qtxdg-mat defapp "x-scheme-handler/$1"`" 2> /dev/null
+        if [ x"$handler" != x"$desktop" ]; then
+            echo no
+            exit_success
+        fi
+    else
+        exit_failure_operation_impossible "no method for checking the url_scheme_handler for desktop $DE"
+    fi
+}
+
+set_url_scheme_handler_lxqt()
+{
+    binary="`desktop_file_to_binary "$2"`"
+    [ "$binary" ] || exit_failure_file_missing
+    set_browser_mime "$2" || return
+
+    # Set the default browser.
+    set_browser_mime "$2" "x-scheme-handler/$1" || return
+}
+
+# }}} LXQt
 # {{{ GNOME 3.x
 
 get_url_scheme_handler_gnome3()
@@ -688,7 +830,6 @@ set_url_scheme_handler_gnome3()
 {
     binary="`desktop_file_to_binary "$2"`"
     [ "$binary" ] || exit_failure_file_missing
-    set_browser_mime "$2" || return
 
     # Set the default browser.
     set_browser_mime "$2" "x-scheme-handler/$1" || return
@@ -834,13 +975,13 @@ fi
 
 [ x"$1" != x ] || exit_failure_syntax "no operation given"
 [ x"$2" != x ] || exit_failure_syntax "no parameter name given"
-[ x"$1" = x"get" -o x"$3" != x ] || exit_failure_syntax "no parameter value given"
+[ x"$1" = x"get" ] || [ x"$3" != x ] || exit_failure_syntax "no parameter value given"
 
 op="$1"
 parm="$2"
 shift 2
 
-if [ x"$op" != x"get" -a x"$op" != x"check" -a x"$op" != x"set" ]; then
+if [ x"$op" != x"get" ] && [ x"$op" != x"check" ] && [ x"$op" != x"set" ]; then
   exit_failure_syntax "invalid operation"
 fi
 
@@ -855,6 +996,10 @@ case "$DE" in
     dispatch_specific kde "$@"
     ;;
 
+    deepin)
+    dispatch_specific deepin "$@"
+    ;;
+
     gnome)
     dispatch_specific gnome "$@"
     ;;
@@ -863,11 +1008,15 @@ case "$DE" in
     dispatch_specific gnome3 "$@"
     ;;
 
+    lxqt)
+    dispatch_specific lxqt "$@"
+    ;;
+
     xfce)
     dispatch_specific xfce "$@"
     ;;
 
-    generic|lxqt|enlightenment)
+    generic|enlightenment)
     dispatch_specific generic "$@"
     ;;
 

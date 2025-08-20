@@ -1,0 +1,11 @@
+--- a/scripts/xdg-email.in
++++ b/scripts/xdg-email.in
+@@ -112,7 +112,7 @@ open_kde()
+     local command
+     case "$KDE_SESSION_VERSION" in
+         '') command=kmailservice ;;
+-        4) command=kde-open ;;
++        4 | 6) command=kde-open ;;
+         *) command=kde-open$KDE_SESSION_VERSION ;;
+     esac
+ 

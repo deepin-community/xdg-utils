@@ -18,29 +18,41 @@
 
 manualpage()
 {
-cat << _MANUALPAGE
+cat << '_MANUALPAGE'
 _MANUALPAGE
 }
 
 usage()
 {
-cat << _USAGE
+cat << '_USAGE'
 _USAGE
 }
 
 #@xdg-utils-common@
+
+update_kde_cache()
+{
+	DEBUG 1 "Running kbuildsycoca"
+	if [ "${KDE_SESSION_VERSION:-0}" -gt 3 ] ; then
+		eval 'kbuildsycoca${KDE_SESSION_VERSION}'$xdg_redirect_output
+	else
+		eval 'kbuildsycoca'$xdg_redirect_output
+	fi
+}
 
 update_mime_database()
 {
    if [ "$mode" = user ] && has_display; then
       detectDE
       if [ x"$DE" = x"kde" ] ; then
-         DEBUG 1 "Running kbuildsycoca"
-         eval 'kbuildsycoca${KDE_SESSION_VERSION}'$xdg_redirect_output
+         update_kde_cache
       fi
    fi
-   for x in `echo "$PATH:/opt/gnome/bin" | sed 's/:/ /g'`; do
-      if [ -x $x/update-mime-database ] ; then
+   old_ifs="$IFS"
+   IFS=:
+   for x in $PATH /opt/gnome/bin ; do
+	  IFS="$old_ifs"
+      if [ -x "$x/update-mime-database" ] ; then
          DEBUG 1 "Running $x/update-mime-database $1"
          eval '$x/update-mime-database $1'$xdg_redirect_output
          return
@@ -57,8 +69,12 @@ info_kde()
           kmimetypefinder "$1" 2>/dev/null | head -n 1
         ;;
         5)
-          DEBUG 1 "Running kmimetypefinder${KDE_SESSION_VERSION} \"$1\""
-          kmimetypefinder${KDE_SESSION_VERSION} "$1" 2>/dev/null | head -n 1
+          DEBUG 1 "Running kmimetypefinder5 \"$1\""
+          kmimetypefinder5 "$1" 2>/dev/null | head -n 1
+        ;;
+        6)
+          DEBUG 1 "Running kmimetypefinder \"$1\""
+          kmimetypefinder "$1" 2>/dev/null | head -n 1
         ;;
       esac
     else
@@ -84,6 +100,23 @@ info_gnome()
     elif gnomevfs-info --help 2>/dev/null 1>&2; then
         DEBUG 1 "Running gnomevfs-info \"$1\""
         gnomevfs-info --slow-mime "$1" 2> /dev/null | grep "^MIME" | cut -d ":" -f 2 | sed s/"^ "//
+    else
+        exit_failure_operation_impossible "no method available for querying MIME type of '$filename'"
+    fi
+
+    if [ $? -eq 0 ]; then
+        exit_success
+    else
+        exit_failure_operation_failed
+    fi
+}
+
+info_lxqt()
+{
+    if qtxdg-mat mimetype --help 2>/dev/null 1>&2; then
+        qtxdg-mat mimetype "$1" 2>/dev/null
+    else
+        exit_failure_operation_impossible "no method available for querying MIME type of '$filename'"
     fi
 
     if [ $? -eq 0 ]; then
@@ -133,11 +166,14 @@ make_default_kde()
     # text/plain=gnome-gedit.desktop;gnu-emacs.desktop;
     vendor="$1"
     mimetype="$2"
-    if [ x"$KDE_SESSION_VERSION" = x"4" ]; then
-        default_dir=`kde4-config --path xdgdata-apps 2> /dev/null | cut -d ':' -f 1`
+    if [ "${KDE_SESSION_VERSION:-0}" -gt 4 ] ; then
+        default_dir="$(qtpaths --writable-path ConfigLocation)"
+        default_file="$default_dir/mimeapps.list"
+    elif [ x"$KDE_SESSION_VERSION" = x"4" ]; then
+        default_dir="$(kde4-config --path xdgdata-apps 2> /dev/null | cut -d ':' -f 1)"
         default_file="$default_dir/mimeapps.list"
     else
-        default_dir=`kde-config --path config 2> /dev/null | cut -d ':' -f 1`
+        default_dir="$(kde-config --path config 2> /dev/null | cut -d ':' -f 1)"
         default_file="$default_dir/profilerc"
     fi
     if [ -z "$default_dir" ]; then
@@ -148,7 +184,7 @@ make_default_kde()
     DEBUG 1 "Updating $default_file"
     mkdir -p "$default_dir"
     [ -f "$default_file" ] || touch "$default_file"
-    if [ x"$KDE_SESSION_VERSION" = x"4" ]; then
+    if [ "${KDE_SESSION_VERSION:-0}" -gt 3 ]; then
         [ -f "$default_file" ] || touch "$default_file"
         awk -v application="$vendor" -v mimetype="$mimetype" '
     BEGIN {
@@ -207,7 +243,6 @@ make_default_kde()
         }
     }
 ' "$default_file" > "${default_file}.new" && mv "${default_file}.new" "$default_file"
-        eval 'kbuildsycoca4'$xdg_redirect_output
     else
         awk -v application="$vendor" -v mimetype="$mimetype" '
     BEGIN {
@@ -237,17 +272,40 @@ make_default_kde()
     fi
 }
 
+make_default_lxqt()
+{
+    # $1 is vendor-name.desktop
+    # $2 is mime/type
+    if qtxdg-mat defapp --help 2>/dev/null 1>&2; then
+        qtxdg-mat defapp --set "$1" "$2" 1>/dev/null
+    else
+        exit_failure_operation_impossible "no method available for setting the default application for MIME type(s) of '$mimetype'"
+    fi
+
+    if [ $? -eq 0 ]; then
+        exit_success
+    else
+        exit_failure_operation_failed
+    fi
+}
+
 make_default_generic()
 {
     # $1 is vendor-name.desktop
     # $2 is mime/type
     # Add $2=$1 to XDG_CONFIG_HOME/mimeapps.list
+    #shellcheck disable=SC2153 # not misspelled
     xdg_config_home="$XDG_CONFIG_HOME"
     [ -n "$xdg_config_home" ] || xdg_config_home="$HOME/.config"
     default_file="$xdg_config_home/mimeapps.list"
+    if [ -L "$default_file" ]; then
+        out_file="$(xdg_realpath "$default_file")"
+    else
+        out_file="$default_file"
+    fi
     DEBUG 2 "make_default_generic $1 $2"
-    DEBUG 1 "Updating $default_file"
-    [ -f "$default_file" ] || touch "$default_file"
+    DEBUG 1 "Updating $out_file"
+    [ -f "$out_file" ] || touch "$out_file"
     awk -v mimetype="$2" -v application="$1" '
     BEGIN {
         prefix=mimetype "="
@@ -295,17 +353,18 @@ make_default_generic()
             blanks--
         }
     }
-' "$default_file" > "${default_file}.new" && mv "${default_file}.new" "$default_file"
+' "$out_file" > "$out_file.new" && mv "$out_file.new" "$out_file"
 }
 
 search_desktop_file()
 {
-    local MIME="$1"
-    local dir="$2"
+    local MIME dir
+    MIME="$1"
+    dir="$2"
 
     grep -l "$MIME;" "$dir/"*.desktop 2>/dev/null
 
-    for f in $dir/*/; do
+    for f in "$dir/"*/; do
       [ -d "$f" ] && search_desktop_file "$MIME" "$f"
     done
 }
@@ -322,12 +381,15 @@ defapp_fallback()
 
     preference=-1
     desktop_file=""
-    for d in `echo "$xdg_user_dir:$xdg_system_dirs" | sed 's/:/ /g'`; do
-       for x in `search_desktop_file "$MIME" "$d/applications"`; do
-          pref=0`awk -F"=" '/InitialPreference=/ {print($2)}' "$x"`
+    old_ifs="$IFS"
+    IFS=:
+    for d in $xdg_user_dir $xdg_system_dirs ; do
+	   IFS="$old_ifs"
+       for x in $(search_desktop_file "$MIME" "$d/applications") ; do
+          pref="0$(awk -F"=" '/InitialPreference=/ {print($2)}' "$x")"
           DEBUG 2 " Checking $x"
 
-          if [ $pref -gt $preference ]; then
+          if [ "$pref" -gt "$preference" ]; then
              DEBUG 2 "   Select $x [ $preference => $pref ]"
              preference=$pref
              desktop_file=$x
@@ -336,28 +398,31 @@ defapp_fallback()
     done
 
     if [ -n "$desktop_file" ] ; then
-       echo `basename $desktop_file`
+       basename "$desktop_file"
        exit_success
     fi
 }
 
 check_mimeapps_list()
 {
-    local mimetype="$1" dir="$2"
-    local desktop oldifs="$IFS"
+	local mimetype dir desktop oldifs
+    mimetype="$1"
+    dir="$2"
+    oldifs="$IFS"
 
     IFS=:
     for desktop in $XDG_CURRENT_DESKTOP ''; do
         IFS="$oldifs"
+        local prefix mimeapps_list result
         if [ -n "$desktop" ]; then
-            local prefix=$(echo "$desktop-" | tr '[:upper:]' '[:lower:]')
+            prefix="$(echo "$desktop-" | tr '[:upper:]' '[:lower:]')"
         else
-            local prefix=
+            prefix=""
         fi
-        local mimeapps_list="$dir/${prefix}mimeapps.list"
+        mimeapps_list="$dir/${prefix}mimeapps.list"
         if [ -f "$mimeapps_list" ] ; then
             DEBUG 2 "Checking $mimeapps_list"
-            local result=$(awk -v mimetype="$mimetype" '
+            result="$(awk -v mimetype="$mimetype" '
     BEGIN {
         prefix=mimetype "="
         indefault=0
@@ -373,7 +438,7 @@ check_mimeapps_list()
             found=1
         }
     }
-' "$mimeapps_list" | cut -d ';' -f 1)
+' "$mimeapps_list")"
             if [ -n "$result" ]; then
                 # $result could be a ; separated list of .desktop files
                 # use the first on the system
@@ -396,6 +461,7 @@ defapp_generic()
     MIME="$1"
     xdg_config_home="$XDG_CONFIG_HOME"
     [ -n "$xdg_config_home" ] || xdg_config_home="$HOME/.config"
+    #shellcheck disable=SC2153 # not misspelled
     xdg_config_dirs="$XDG_CONFIG_DIRS"
     [ -n "$xdg_config_dirs" ] || xdg_config_dirs="/etc/xdg"
     xdg_user_dir="$XDG_DATA_HOME"
@@ -403,8 +469,9 @@ defapp_generic()
     xdg_system_dirs="$XDG_DATA_DIRS"
     [ -n "$xdg_system_dirs" ] || xdg_system_dirs=/usr/local/share/:/usr/share/
 
-    local oldifs="$IFS" dir
+    local oldifs dir
 
+    oldifs="$IFS"
     IFS=:
     for dir in $xdg_config_home $xdg_config_dirs; do
         IFS="$oldifs"
@@ -417,18 +484,23 @@ defapp_generic()
         check_mimeapps_list "$MIME" "$dir/applications"
     done
 
-    for x in `echo "$xdg_user_dir:$xdg_system_dirs" | sed 's/:/ /g'`; do
+	IFS=:
+    for x in $xdg_user_dir $xdg_system_dirs ; do
+       IFS="$oldifs"
        for prefix in "$XDG_MENU_PREFIX" ""; do
           DEBUG 2 "Checking $x/applications/${prefix}defaults.list and $x/applications/${prefix}mimeinfo.cache"
-          trader_result=`grep "$MIME=" $x/applications/${prefix}defaults.list $x/applications/${prefix}mimeinfo.cache 2> /dev/null | head -n 1 | cut -d '=' -f 2 | cut -d ';' -f 1`
+          trader_result="$(
+          	grep "$MIME=" "$x/applications/${prefix}defaults.list" "$x/applications/${prefix}mimeinfo.cache" 2> /dev/null |
+          	head -n 1 | cut -d '=' -f 2 | cut -d ';' -f 1
+          )"
           if [ -n "$trader_result" ] ; then
-              echo $trader_result
+              echo "$trader_result"
               exit_success
           fi
        done
     done
 
-    defapp_fallback $MIME
+    defapp_fallback "$MIME"
     exit_success
 }
 
@@ -439,19 +511,19 @@ defapp_kde()
     if [ -n "${KDE_SESSION_VERSION}" ]; then
       case "${KDE_SESSION_VERSION}" in
         4)
-          KTRADER=`which ktraderclient 2> /dev/null`
+          KTRADER="$(command -v ktraderclient)" # FIXME: Plasma 6?
         ;;
         5)
-          KTRADER=`which ktraderclient${KDE_SESSION_VERSION} 2> /dev/null`
+          KTRADER="$(command -v ktraderclient${KDE_SESSION_VERSION})"
         ;;
       esac
     else
-        KTRADER=`which ktradertest 2> /dev/null`
+        KTRADER="$(command -v ktradertest)"
     fi
     if [ -n "$KTRADER" ] ; then
         DEBUG 1 "Running KDE trader query \"$MIME\" mimetype and \"Application\" servicetype"
-        trader_result=`$KTRADER --mimetype "$MIME" --servicetype Application 2>/dev/null \
-            | grep -E "^DesktopEntryPath : |\.desktop$" | head -n1 | sed "s/^DesktopEntryPath : '\(.*\.desktop\)'\$/\1/"`
+        trader_result="$($KTRADER --mimetype "$MIME" --servicetype Application 2>/dev/null \
+            | grep -E "^DesktopEntryPath : |\.desktop$" | head -n1 | sed "s/^DesktopEntryPath : '\(.*\.desktop\)'\$/\1/")"
         if [ -n "$trader_result" ] ; then
             basename "$trader_result"
             exit_success
@@ -460,6 +532,21 @@ defapp_kde()
         fi
     else
         defapp_generic "$1"
+    fi
+}
+
+defapp_lxqt()
+{
+    if qtxdg-mat defapp --help 2>/dev/null 1>&2; then
+        qtxdg-mat defapp "$1"
+    else
+        exit_failure_operation_impossible "no method available for querying the default application for MIME type of '$mimetype'"
+    fi
+
+    if [ $? -eq 0 ]; then
+        exit_success
+    else
+        exit_failure_operation_failed
     fi
 }
 
@@ -500,7 +587,7 @@ case $1 in
             ;;
         esac
         check_input_file "$filename"
-        filename=`readlink -f -- "$filename"`
+        filename="$(xdg_realpath "$filename")"
         ;;
 
       default)
@@ -565,6 +652,8 @@ if [ "$action" = "makedefault" ]; then
         exit_failure_syntax "mimetype argument missing"
     fi
 
+    detectDE
+
     while [ $# -gt 0 ] ; do
         case $1 in
           -*)
@@ -574,9 +663,20 @@ if [ "$action" = "makedefault" ]; then
         mimetype="$1"
         shift
 
-        make_default_kde "$filename" "$mimetype"
-        make_default_generic "$filename" "$mimetype"
+        case "$DE" in
+            lxqt)
+            make_default_lxqt "$filename" "$mimetype"
+            ;;
+
+            *)
+            make_default_kde "$filename" "$mimetype"
+            make_default_generic "$filename" "$mimetype"
+            ;;
+        esac
     done
+    if [ "$DE" = "kde" ] ; then
+        update_kde_cache
+    fi
     exit_success
 fi
 
@@ -598,26 +698,34 @@ if [ "$action" = "info" ]; then
         info_gnome "$filename"
         ;;
 
+        lxqt)
+        info_lxqt "$filename"
+        ;;
+
         *)
         info_generic "$filename"
         ;;
     esac
-    exit_failure_operation_impossible "no method available for quering MIME type of '$filename'"
+    exit_failure_operation_impossible "no method available for querying MIME type of '$filename'"
 fi
 
 if [ "$action" = "defapp" ]; then
     detectDE
 
-    case "$DE" in
-        kde)
+    if [ "$DE" = "kde" ] && [ "$KDE_SESSION_VERSION" -lt "6" ]; then
         defapp_kde "$mimetype"
+    fi
+
+    case "$DE" in
+        lxqt)
+        defapp_lxqt "$mimetype"
         ;;
 
         *)
         defapp_generic "$mimetype"
         ;;
     esac
-    exit_failure_operation_impossible "no method available for quering default application for '$mimetype'"
+    exit_failure_operation_impossible "no method available for querying default application for '$mimetype'"
 fi
 
 vendor=true
@@ -678,7 +786,7 @@ if [ -n "$XDG_UTILS_INSTALL_MODE" ] ; then
 fi
 
 if [ -z "$mode" ] ; then
-    if [ `whoami` = "root" ] ; then
+    if [ "$(id -u)" -eq 0 ] ; then
         mode="system"
     else
         mode="user"
@@ -689,7 +797,7 @@ if [ -z "$filename" ] ; then
     exit_failure_syntax "mimetypes-file argument missing"
 fi
 
-if [ "$vendor" =  "true" -a "$action" = "install" ] ; then
+if [ "$vendor" =  "true" ] && [ "$action" = "install" ] ; then
     check_vendor_prefix "$filename"
 fi
 
@@ -703,28 +811,35 @@ xdg_user_dir="$xdg_user_dir/$xdg_dir_name"
 
 xdg_system_dirs="$XDG_DATA_DIRS"
 [ -n "$xdg_system_dirs" ] || xdg_system_dirs=/usr/local/share/:/usr/share/
-for x in `echo $xdg_system_dirs | sed 's/:/ /g'`; do
-    if [ -w $x/$xdg_dir_name ] ; then
+
+old_ifs="$IFS"
+IFS=:
+for x in $xdg_system_dirs ; do
+	IFS="$old_ifs"
+    if [ -w "$x/$xdg_dir_name" ] ; then
         [ x"$mode" = x"system" ] && xdg_base_dir="$x/mime"
         xdg_global_dir="$x/$xdg_dir_name"
         break
     fi
 done
-[ -w $xdg_global_dir ] || xdg_global_dir=
+[ -w "$xdg_global_dir" ] || xdg_global_dir=
 DEBUG 3 "xdg_user_dir: $xdg_user_dir"
 DEBUG 3 "xdg_global_dir: $xdg_global_dir"
 
 # Find KDE3 mimelnk directory
 kde_user_dir=
 kde_global_dir=
-kde_global_dirs=`kde${KDE_SESSION_VERSION}-config --path mime 2> /dev/null`
+kde_global_dirs="$("kde${KDE_SESSION_VERSION}-config" --path mime 2> /dev/null)"
 DEBUG 3 "kde_global_dirs: $kde_global_dirs"
 first=
-for x in `echo $kde_global_dirs | sed 's/:/ /g'` ; do
+old_ifs="$IFS"
+IFS=:
+for x in $kde_global_dirs ; do
+	IFS="$old_ifs"
     if [ -z "$first" ] ; then
         first=false
         kde_user_dir="$x"
-    elif [ -w $x ] ; then
+    elif [ -w "$x" ] ; then
         kde_global_dir="$x"
     fi
 done
@@ -759,14 +874,14 @@ fi
 # echo "[gnome|$gnome_user_dir|$gnome_global_dir]"
 # echo "[using|$xdg_dir|$kde_dir|$gnome_dir]"
 
-basefile=`basename "$filename"`
+basefile="$(basename "$filename")"
 #[ -z $vendor ] || basefile="$vendor-$basefile"
 
 mimetypes=
 if [ -n "$kde_dir" ] ; then
     DEBUG 2 "KDE3 mimelnk directory found, extracting mimetypes from XML file"
 
-    mimetypes=`awk < "$filename" '
+    mimetypes="$(awk < "$filename" '
 # Strip XML comments
 BEGIN {
  suppress=0
@@ -806,18 +921,18 @@ BEGIN {
       print substr($0,RSTART+6,RLENGTH-6)
     }
   }
-}'`
+}')"
 fi
 
 DEBUG 1 "$action mimetype in $xdg_dir"
 
 case $action in
     install)
-        save_umask=`umask`
-        umask $my_umask
+        save_umask="$(umask)"
+        umask "$my_umask"
 
         for x in $xdg_dir ; do
-            mkdir -p $x
+            mkdir -p "$x"
             eval 'cp $filename $x/$basefile'$xdg_redirect_output
         done
 
@@ -825,7 +940,7 @@ case $action in
             # No quotes around $mimetypes
             for x in $mimetypes ; do
                 DEBUG 1 "Installing $kde_dir/$x.desktop (KDE 3.x support)"
-                mkdir -p `dirname $kde_dir/$x.desktop`
+                mkdir -p "$(dirname "$kde_dir/$x.desktop")"
                 awk < "$filename" '
 # Strip XML comments
 BEGIN {
@@ -855,7 +970,7 @@ BEGIN {
     }
  while(1)
 }
-' | awk > $kde_dir/$x.desktop '
+' | awk > "$kde_dir/$x.desktop" '
 # Extract mimetype $x from the XML file $filename
 # Note that bash requires us to escape a single quote as '"'"'
 BEGIN {
@@ -932,33 +1047,33 @@ END {
     exit 1
   }
 }
-' $x $basefile
+' "$x" "$basefile"
                 if [ "$?" = "1" ] ; then
-                    grep -A 10 "^Error:" $kde_dir/$x.desktop >&2
-                    rm $kde_dir/$x.desktop
+                    grep -A 10 "^Error:" "$kde_dir/$x.desktop" >&2
+                    rm "$kde_dir/$x.desktop"
                     exit 1
                 fi
             done
         fi
 
-        umask $save_umask
+        umask "$save_umask"
         ;;
 
     uninstall)
         for x in $xdg_dir ; do
-            rm -f $x/$basefile
+            rm -f "$x/$basefile"
         done
 
         # No quotes around $mimetypes
         for x in $mimetypes ; do
-            if grep '^# Installed by xdg-mime' $kde_dir/$x.desktop >/dev/null 2>&1; then
+            if grep '^# Installed by xdg-mime' "$kde_dir/$x.desktop" >/dev/null 2>&1; then
                 DEBUG 1 "Removing $kde_dir/$x.desktop (KDE 3.x support)"
-                rm -f $kde_dir/$x.desktop
+                rm -f "$kde_dir/$x.desktop"
             fi
         done
         ;;
 esac
 
-update_mime_database $xdg_base_dir
+update_mime_database "$xdg_base_dir"
 
 exit_success

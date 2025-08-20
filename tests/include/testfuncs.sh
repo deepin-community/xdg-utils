@@ -59,11 +59,11 @@ test_status() {
 ## Called after test_init()
 test_procedure() {
 	verify_test_context
-	## Make sure nothing screwed up in initilization
+	## Make sure nothing screwed up in initialization
 	if [ "$TEST_STATUS" != "PASS" ]; then
 		# Something failed before we could get to the test.
 		FAIL=N
-		test_result NORESULT "Initilization failed!"
+		test_result NORESULT "Initialization failed!"
 	fi
 }
 

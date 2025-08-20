@@ -1,8 +1,7 @@
 #!/bin/bash
 
 parentdir=${0%/*}
-which perl >/dev/null 2>&1
-if [ "$?" ] ; then
+if command -v perl >/dev/null ; then
 	distro=`perl $parentdir/linux_distro 2>&1`
 else
 	distro="not available (couldn't find perl)"
