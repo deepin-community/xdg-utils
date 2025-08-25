@@ -1,2 +1,3 @@
 debian-changes
 kde-6-xdg-email.patch
+0001-fix-deepin-browser-detection-for-newer-versions.patch

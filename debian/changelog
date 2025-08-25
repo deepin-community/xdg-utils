@@ -1,3 +1,9 @@
+xdg-utils (1.2.1-2deepin1) unstable; urgency=medium
+
+  * add 0001-fix-deepin-browser-detection-for-newer-versions.patch
+
+ -- lichenggang <lichenggang@deepin.org>  Fri, 22 Aug 2025 17:23:27 +0800
+
 xdg-utils (1.2.1-2) unstable; urgency=medium
 
   * Fix xdg-email for KDE 6. Closes: #1083074.
