@@ -1,0 +1,11 @@
+--- xdg-utils-1.2.1.orig/scripts/xdg-utils-common.in
++++ xdg-utils-1.2.1/scripts/xdg-utils-common.in
+@@ -296,7 +296,7 @@ detectDE()
+          KDE)
+            DE=kde;
+            ;;
+-         DEEPIN|Deepin|deepin)
++         DEEPIN|Deepin|deepin|DDE)
+            DE=deepin;
+            ;;
+          LXDE)
